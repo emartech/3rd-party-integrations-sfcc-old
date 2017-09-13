@@ -1,0 +1,132 @@
+/**
+* Demandware Script File
+* Checks if contact exists and updates/creates a contact with order billngAddress object details
+* Sends a call to emarsys with shipping details in request for each shipped order
+* 
+*/
+
+var customObjectMgr = require("dw/object/CustomObjectMgr"),
+	logger = require("dw/system/Logger"),
+	web = require("dw/web");
+
+function execute( args : PipelineDictionary ) : Number
+{
+	var emarsysHelper : Object = new (require("./../util/EmarsysHelper"))(),
+		mappedFields = null,
+		// next 3 are requests bodies objects
+		getContactData,
+		submitContactData,
+		triggerEvent,
+		co = customObjectMgr.getCustomObject("EmarsysTransactionalEmailsConfig", "shipping"); // custom object that stores config for shipping emails
+		
+	// get all orders with status "SHIPPED", that are marked for shipping confirmation emails and the email has not been sent yet
+	var orders = dw.order.OrderMgr.searchOrders("shippingStatus = {0} AND custom.sendEmarsysShippingEmail = {1} AND NOT custom.emarsysShippingEmailSent = {2}", null, dw.order.Order.SHIPPING_STATUS_SHIPPED, true, true),
+		genderCodes = JSON.parse(dw.system.Site.current.preferences.custom.emarsysGenderCodes),
+		method = "PUT",
+		externalEventId;
+	
+	try {
+		// get stored values if custom object exists
+		mappedFields = JSON.parse(co.custom.mappedFields);
+		externalEventId = co.custom.externalEvent;
+	} catch (err) {
+		// return error if any custom object instance was found
+		logger.error("[SendShippingData.ds #]" + err.lineNumber + "] - *** Send data error: " + err);
+		return PIPELET_ERROR;
+	}
+	
+	while (orders.hasNext()) {
+		try {
+			var order = orders.next(),
+				billingAddress = order.billingAddress,
+				email = order.customerEmail;
+			
+			// object to store emarsys fields codes and billingAddress attributes
+			var billingAddressMap = {};
+				emarsysHelper.addDataToMap(order.billingAddress, billingAddressMap);
+				
+			// base request to check if contact already exists
+			var baseRequest = {
+					"keyId": "3",
+					"keyValues": [email]
+				};
+				
+			// call to check if contact already exists
+			getContactData = emarsysHelper.triggerAPICall("emarsys.api", "contact/getdata", baseRequest, "POST");
+			if (getContactData.status !== "OK") {
+				logger.error("[SendShippingData.ds - Get data error:" + getContactData.error + "] - ***Emarsys error message: " + getContactData.errorMessage);
+			}
+				
+			// parse response and check for errors
+			var dataObj = JSON.parse(getContactData.object),
+				errors = dataObj.data.errors;
+			
+			if (errors.length > 0) {
+				var error = errors[0];
+				// check if account exists and change request method depending on that
+				// error code 2008 means that account wasn't created yet
+				if (error.errorCode == "2008") {
+					method = "POST";
+				}
+			}
+			
+			// request object to update/create contact data
+			var contactDataToSubmit = {
+					"keyId": "3",
+					"3": email,
+				};
+			
+			// if source id value exists add it to request
+			emarsysHelper.addSourceIdToRequest(contactDataToSubmit);
+				
+			// add billing address fields
+			emarsysHelper.addFields(billingAddressMap, contactDataToSubmit);
+			
+			// map gender string value to a scalar
+			if (order.customer.profile && order.customer.profile.gender.value !== 0) {
+				var code = genderCodes[order.customer.profile.gender.value];
+				contactDataToSubmit["5"] = code;
+			}
+			
+			// call to Emarsys to update/create contact data
+			submitContactData = emarsysHelper.triggerAPICall("emarsys.api", "contact", contactDataToSubmit, method);
+			if (submitContactData.status !== "OK") {
+				logger.error("SendShippingData.ds - Submit data error:" + submitContactData.error + "] - ***Emarsys error message: " + submitContactData.errorMessage);
+			}
+
+			// order shipping data to send
+			var shippingData = {
+				"key_id": "3",
+				"external_id": email,
+				"data": {
+					"global": {},
+					"products": []
+				}
+			};
+			
+			// add order fields to global object
+			emarsysHelper.appendGlobalMappedFieldsObject(mappedFields, shippingData.data.global, order);
+			
+			// add products info
+			emarsysHelper.appendProductInfo(mappedFields, order, shippingData.data.products);
+
+			if (externalEventId) {
+				var endpoint = "event/" + externalEventId + "/trigger";
+				triggerEvent = emarsysHelper.triggerAPICall("emarsys.api", endpoint, shippingData, "POST");
+				
+				if (triggerEvent.status !== "OK") {
+					logger.error("[SendShippingData.ds - Trigger event error:" + triggerEvent.error + "] - ***Emarsys error message: " + triggerEvent.errorMessage);
+				} else {
+					order.custom.emarsysShippingEmailSent = true;
+				}
+			}
+		} catch (err) {
+			logger.error("[SendShippingData.ds #" + err.lineNumber + "] - ***Submit data error message: " + err);
+			return PIPELET_ERROR;
+		}
+		
+	}
+	
+
+	return PIPELET_NEXT;
+}

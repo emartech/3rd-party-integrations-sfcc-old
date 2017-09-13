@@ -1,0 +1,48 @@
+/**
+* Demandware Script File
+* To get saved data from CO
+*
+*
+*   @output SavedFieldsObj : Object
+*   @output SavedElementsList : Array
+*   @output SavedEvent : Array
+*   @output Success : Boolean
+*   @output Errors : Object
+*   @output StoredConfiguration : Object
+*
+*/
+
+var customObjectMgr = require('dw/object/CustomObjectMgr'),
+	logger = require("dw/system/Logger"),
+	web = require("dw/web");
+
+function execute( args : PipelineDictionary ) : Number
+{
+
+	try {
+		// get custom object instance
+	    var co = customObjectMgr.getCustomObject('EmarsysTransactionalEmailsConfig', 'shipping'),
+	    	savedConfiguration : Object = new Object(),	// object to store data from the instance
+	    	mappedFields : Array = new Array();
+	    
+	    if (co) {
+	    	savedConfiguration.externalEvent = co.custom.externalEvent;
+	    	mappedFields = JSON.parse(co.custom.mappedFields);
+	    	
+	    	// if CO has stored in it mapped fields create a pair in the savedConfiguration object
+	    	if (mappedFields.length > 0) {
+	    		savedConfiguration.mappedFields = mappedFields;
+	    	}
+	    }
+	    args.StoredConfiguration = savedConfiguration;
+	} catch (err) {
+		logger.error("[GetShippingConfigData.ds #" + err.lineNumber + "] - ***Emarsys get shipping config data error message: " + err);
+		
+    	args.Success = false;
+    	args.Errors = {"name": web.Resource.msg("get.config.error", "emails_configuration", null), "body": web.Resource.msg("contact.administrator", "emails_configuration", null)};
+		
+		return PIPELET_ERROR;
+	}
+
+    return PIPELET_NEXT;
+}

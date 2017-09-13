@@ -1,0 +1,24 @@
+<iscontent type="text/html" charset="UTF-8" compact="true"/>
+
+<iscomment>
+	Define input fields
+</iscomment>
+<ismodule template="components/inputfield.isml"
+	name="input"
+	attribute="formfield"
+	attribute="type"
+	attribute="maxlength"
+	attribute="size"
+	attribute="xhtmlclass"
+	attribute="label"
+	attribute="value"
+	attribute="p_dynamic"
+	attribute="attribute1"
+	attribute="value1"
+	attribute="attribute2"
+	attribute="value2"
+	attribute="attribute3"
+	attribute="value3"
+	attribute="requiredtext"
+	attribute="info"
+/>

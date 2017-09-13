@@ -1,0 +1,44 @@
+/**
+* The script for retrieving and storing Emarsys external events
+* @output ErrorMsg : String
+*/
+var system = require('dw/system'),
+    util   = require('dw/util'),
+    web    = require('dw/web'),
+    obj    = require('dw/object'),
+    svc    = require('dw/svc'),
+    net    = require('dw/net'),
+    io     = require('dw/io'),
+    crypto = require('dw/crypto');
+
+function execute( args : PipelineDictionary ) : Number {
+
+    var emarsysHelper : Object = new (require("./../scripts/util/EmarsysHelper"))(),
+        UniqueObjectKey : String = "StoredEvents";
+
+    try {
+
+        var externalEvents = emarsysHelper.triggerAPICall("emarsys.api", "event", null, "GET");
+
+        if(!empty(externalEvents) && externalEvents.status == "OK") {
+            var result = JSON.parse(externalEvents.object);
+                result = JSON.stringify(result.data);
+            var CheckObject : obj.CustomObject = obj.CustomObjectMgr.getCustomObject("EmarsysExternalEvents", UniqueObjectKey);
+
+            if(CheckObject != null) {
+                obj.CustomObjectMgr.remove(CheckObject);
+            }
+            var Store : obj.CustomObject = obj.CustomObjectMgr.createCustomObject("EmarsysExternalEvents", UniqueObjectKey);
+            Store.custom.result = result;
+            Store.custom.id = Store.custom.name = UniqueObjectKey;
+
+        }
+
+    } catch(err) {
+        system.Logger.error("[GetExternalEventsJob.ds #" + err.lineNumber + "] - ***Emarsys get external events error message: " + err);
+        args.ErrorMsg = "Error mesage is:" + err;
+        return PIPELET_ERROR;
+    }
+
+    return PIPELET_NEXT;
+}

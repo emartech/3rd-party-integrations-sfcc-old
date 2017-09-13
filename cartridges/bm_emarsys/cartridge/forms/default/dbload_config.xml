@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<form xmlns="http://www.demandware.com/xml/form/2008-04-19">
+    <field formid="placeholder" type="string" mandatory="true" />
+    <field formid="mappedField" type="string" mandatory="true" />
+    <field formid="removeField" type="string" mandatory="false" />
+    <action formid="dbload_update" valid-form="false" />
+</form>

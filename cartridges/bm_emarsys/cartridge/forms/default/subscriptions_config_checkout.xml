@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<form xmlns="http://www.demandware.com/xml/form/2008-04-19">
+    <field formid="checkoutSubscriptionStrategy" type="string" missing-error="" mandatory="true" />
+    <field formid="checkoutExternalEventOptin" type="string" missing-error="" mandatory="false" />
+    <field formid="checkoutExternalEventOptinAfterConfirmation" type="string" missing-error="" mandatory="false" />
+    <field formid="tab" type="string"  mandatory="false" />
+    <action formid="config_checkout" valid-form="true" />
+</form>

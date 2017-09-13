@@ -1,0 +1,33 @@
+/**
+* Demandware Script File
+* To get custom object instance and read stored external evet in it
+*
+*   @output Events : Array
+*   @output Success : Boolean
+*   @output Errors : Object
+*
+*/
+var object = require("dw/object"),
+	logger = require("dw/system/Logger"),
+	web = require("dw/web");
+
+function execute( args : PipelineDictionary ) : Number
+{
+
+	try {
+	    var co = object.CustomObjectMgr.getCustomObject("EmarsysExternalEvents", "StoredEvents"),
+	    	result = co.custom.result,
+	    	eventsList = JSON.parse(result);
+	    
+	    args.Events = eventsList;
+	} catch (err) {
+		logger.error("[GetExternalEvents.ds #" + err.lineNumber + "] - ***Emarsys get external events error message: " + err);
+		
+    	args.Success = false;
+    	args.Errors = {"name": web.Resource.msg("noevents.error.body", "emails_configuration", null), "body": web.Resource.msg("noevents.error.body", "emails_configuration", null)};
+		
+		return PIPELET_ERROR;
+	}
+
+    return PIPELET_NEXT;
+}

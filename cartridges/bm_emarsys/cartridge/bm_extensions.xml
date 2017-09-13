@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<extensions xmlns="http://www.demandware.com/xml/bmmodules/2007-12-11" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.demandware.com/xml/bmmodules/2007-12-11 bmext.xsd">
+
+<menuitem id="emarsys" position="1999" site="true">
+    <name xml:lang="x-default">Emarsys Integration</name>
+    <short_description xml:lang="x-default">Emarsys integration settings.</short_description>
+    <description xml:lang="x-default">Emarsys integration settings.</description>
+    <icon>icons/logo.png</icon>
+</menuitem>
+
+<menuaction id="emarsys-newsletter" menupath="emarsys" position="500" site="true">
+    <name xml:lang="x-default">Newsletter subscriptions</name>
+    <short_description xml:lang="x-default">Configure newsletter subscription methods.</short_description>
+    <description xml:lang="x-default">Configure newsletter subscription methods.</description>
+    <exec pipeline="EmarsysConfig" node="Subscription" />
+    <sub-pipelines>
+        <pipeline name="EmarsysConfig-Subscription" />
+        <pipeline name="EmarsysConfig-NewsletterConfiguration" />
+    </sub-pipelines>
+        <parameters>
+            <parameter name="menuname" value="Newsletter subscriptions" />
+            <parameter name="mainmenuname" value="Emarsys Integration" />
+        </parameters>
+    <icon>icons/logo.png</icon>
+</menuaction>
+
+<menuaction id="emarsys-emails-orderconfirmation" menupath="emarsys" position="501" site="true">
+    <name xml:lang="x-default">Order Confirmation configuration</name>
+    <short_description xml:lang="x-default">Configure order confirmation integration.</short_description>
+    <description xml:lang="x-default">Configure order confirmation integration.</description>
+    <exec pipeline="EmarsysConfig" node="OrderConfirmation" />
+    <sub-pipelines>
+        <pipeline name="EmarsysConfig-OrderConfirmation" />
+        <pipeline name="EmarsysConfig-OrderConfirmationConfig" />
+    </sub-pipelines>
+        <parameters>
+            <parameter name="menuname" value="Order Confirmation configuration" />
+            <parameter name="mainmenuname" value="Emarsys Integration" />
+        </parameters>
+    <icon>icons/logo.png</icon>
+</menuaction>
+
+<menuaction id="emarsys-shipping-confirmation" menupath="emarsys" position="502" site="true">
+    <name xml:lang="x-default">Shipping Confirmation configuration</name>
+    <short_description xml:lang="x-default">Configure shipping confirmation email fields.</short_description>
+    <description xml:lang="x-default">Configure shipping confirmation email fields.</description>
+    <exec pipeline="EmarsysConfig" node="ShippingConfirmation" />
+    <sub-pipelines>
+        <pipeline name="EmarsysConfig-Save" />
+        <pipeline name="EmarsysConfig-ShippingConfirmation" />
+    </sub-pipelines>
+        <parameters>
+            <parameter name="menuname" value="Shipping Confirmation configuration" />
+            <parameter name="mainmenuname" value="Emarsys Integration" />
+        </parameters>
+    <icon>icons/logo.png</icon>
+</menuaction>
+
+<menuaction id="emarsys-smartinsight-configuration" menupath="emarsys" position="700" site="true">
+    <name xml:lang="x-default">SmartInsight configuration</name>
+    <short_description xml:lang="x-default">Configure SmartInsight fields.</short_description>
+    <description xml:lang="x-default">Configure SmartInsight fields.</description>
+    <exec pipeline="EmarsysConfig" node="SmartInsight" />
+    <sub-pipelines>
+        <pipeline name="EmarsysConfig-SaveSmartInsight" />
+        <pipeline name="EmarsysConfig-SmartInsight" />
+    </sub-pipelines>
+        <parameters>
+            <parameter name="menuname" value="SmartInsight configuration" />
+            <parameter name="mainmenuname" value="Emarsys Integration" />
+        </parameters>
+    <icon>icons/logo.png</icon>
+</menuaction>
+
+<menuaction id="emarsys-predict-configuration" menupath="emarsys" position="503" site="true">
+    <name xml:lang="x-default">Predict Configuration</name>
+    <short_description xml:lang="x-default">Configure Emarsys Predict.</short_description>
+    <description xml:lang="x-default">Configure Emarsys Predict.</description>
+    <exec pipeline="EmarsysConfig" node="Predict" />
+    <sub-pipelines>
+        <pipeline name="EmarsysConfig-Predict" />
+        <pipeline name="EmarsysConfig-PredictUpdate" />
+    </sub-pipelines>
+        <parameters>
+            <parameter name="menuname" value="Predict Configuration" />
+            <parameter name="mainmenuname" value="Emarsys Integration" />
+        </parameters>
+    <icon>icons/logo.png</icon>
+</menuaction>
+
+<menuaction id="emarsys-dbload-configuration" menupath="emarsys" position="504" site="true">
+    <name xml:lang="x-default">Database Load Configuration</name>
+    <short_description xml:lang="x-default">Configure Database Load.</short_description>
+    <description xml:lang="x-default">Configure Database Load.</description>
+    <exec pipeline="EmarsysConfig" node="DBLoad" />
+    <sub-pipelines>
+        <pipeline name="EmarsysConfig-DBLoad" />
+        <pipeline name="EmarsysConfig-DBLoadUpdate" />
+    </sub-pipelines>
+        <parameters>
+            <parameter name="menuname" value="Database Load Configuration" />
+            <parameter name="mainmenuname" value="Emarsys Integration" />
+        </parameters>
+    <icon>icons/logo.png</icon>
+</menuaction>
+
+</extensions>

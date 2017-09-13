@@ -1,0 +1,30 @@
+/**
+ * Resource helper
+ *
+ */
+
+function ResourceHelper() {}
+    /**
+     * Get the client-side resources of a given page
+     * @returns {Object} An objects key key-value pairs holding the resources
+     */
+    ResourceHelper.getResources = function(pageContext) {
+        var Resource = require('dw/web/Resource');
+
+        // application resources
+        var resources = {
+
+            // Validation messages
+            SELECT_ELEMENT_ERROR            : Resource.msg('select.element.error', 'forms', null),
+            SAME_ELEMENT_ERROR              : Resource.msg('same.elements.error', 'forms', null),
+            SAME_PLACEHOLDER_ERROR          : Resource.msg('same.placeholder.error', 'forms', null),
+            SAME_ATTRIBUTE_ERROR          	: Resource.msg('same.attribute.error', 'forms', null),
+            EMPTY_PLACEHOLDER_ERROR         : Resource.msg('empty.placeholder.error', 'forms', null),
+            EMPTY_ATTRIBUTE_ERROR     	    : Resource.msg('empty.attribute.error', 'forms', null),
+            SELECT_EVENT_ERROR              : Resource.msg('select.event.error', 'forms', null),
+            DATE_ERROR      		        : Resource.msg('date.error', 'forms', null)
+
+        };
+
+        return resources;
+    }

@@ -1,0 +1,53 @@
+/**
+*	Create Single Choice Value Mapping
+*
+*	@output ErrorMsg : String An Error message
+*
+*/
+var system   = require("dw/system"),
+	logger   = require("dw/system/Logger");
+
+function execute( args : PipelineDictionary ) : Number
+{
+	var emarsysHelper : Object = new (require("./../../util/EmarsysHelper"))(),
+		fieldMapping  : Object = new Object(),
+		response : Object,
+		availableFields : Object;
+		
+	try {
+		response = emarsysHelper.triggerAPICall("emarsys.api", "field", {}, "GET");
+		if (response.status == "OK") {
+			availableFields = JSON.parse(response.object);
+			for each(var field in availableFields['data']){
+				if(field['application_type'] == 'singlechoice' || (field['application_type'] == 'special' && field['name'] == 'Opt-In')){
+					response = emarsysHelper.triggerAPICall("emarsys.api", "field/" + field['id'] + "/choice", {}, "GET");
+					if (response.status == "OK") {
+						var fieldObject = JSON.parse(response.object),
+							filedChoiceMapping = [];
+						for each(var fieldChoice in fieldObject['data']){
+							filedChoiceMapping.push({
+								"value" : fieldChoice['id'],
+								"choice" : fieldChoice['choice']
+							});
+						}
+						fieldMapping[field['id']] = filedChoiceMapping;
+					}else{
+						logger.error("[Create Single Choice Value Mapping:" + response.error + "] - ***Emarsys Create Single Choice Value Mapping error message: " + response.errorMessage);
+						args.ErrorMsg = "An error occured with status code " + response.error + '.Message' + response.errorMessage;
+						return PIPELET_ERROR;
+					}
+				}
+			}
+			system.Site.current.setCustomPreferenceValue('emarsysSingleChoiceValueMapping', JSON.stringify(fieldMapping));
+			return PIPELET_NEXT;
+		}else{
+			logger.error("[Create Single Choice Value Mapping:" + response.error + "] - ***Emarsys Create Single Choice Value Mapping error message: " + response.errorMessage);
+			args.ErrorMsg = "An error occured with status code " + response.error + '.Message' + response.errorMessage;
+			return PIPELET_ERROR;
+		}
+	} catch(err) {
+		logger.error("[CreateSingleChoiceValueMapping.ds #" + err.lineNumber + "] - ***Emarsys Create Single Choice Value Mapping error message: " + err);
+		args.ErrorMsg = err.toString();
+		return PIPELET_ERROR;
+	}
+}

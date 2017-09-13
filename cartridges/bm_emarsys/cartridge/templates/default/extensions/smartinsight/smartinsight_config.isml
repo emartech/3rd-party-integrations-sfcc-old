@@ -1,0 +1,192 @@
+<isdecorate template="page_wrapper">
+<iscontent type="text/html" charset="UTF-8">
+<isinclude template="inc/Modules">
+<link rel="stylesheet" type="text/css" href="${URLUtils.staticURL('css/main.css')}">
+<link href="https://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css" rel="stylesheet">
+<script src="https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+
+<isif condition="${!empty(pdict.Errors)}">
+  <table border="0" cellspacing="0" cellpadding="4" width="100%" class="error_box n s e w">
+      <tr valign="top">
+          <td class="error_icon top e"><img src="${URLUtils.webRoot()}/images/error.gif" width="16" height="15" alt="" border="0"/></td>
+          <td class="error top" width="100%">
+          <p><isprint value="${pdict.Errors.name}" />: <isprint value="${pdict.Errors.body}" /><br/></p>
+          </td>
+      </tr>
+  </table>
+<iselse>
+
+<isif condition="${!empty(pdict.Success) && pdict.Success == true}">
+    <table border="0" cellpadding="4" cellspacing="0" width="100%" class="aldi confirm_box" style="margin: 10px auto;">
+        <tr>
+          <td class="lockedit_icon e"><img src="${URLUtils.webRoot()}/images/icon_lockedit.png" width="16" height="15" alt="" border="0"/></td>
+            <td class="infobox_title adjust_td_padding" width="100%">
+             <p><isprint value="${Resource.msg('success.true', 'forms', null)}" /></p>
+            </td>
+        </tr>
+    </table>
+<iselseif condition="${!empty(pdict.Success) && pdict.Success == false}">
+    <table border="0" cellpadding="4" cellspacing="0" width="100%" class="aldi confirm_box" style="margin: 10px auto;">
+        <tr>
+            <td class="unlock_icon e"><img src="${URLUtils.webRoot()}/images/icon_unlocked.png" width="16" height="15" alt="" border="0"/></td>
+            <td class="infobox_title adjust_td_padding" width="100%">
+             <p><isprint value="${pdict.Errors.name}" />: <isprint value="${pdict.Errors.body}" /><br/></p>
+            </td>
+        </tr>
+    </table>
+</isif>
+
+<iscomment>Too many values in the dynamic form</iscomment>
+<div id="oversizedCount">
+    <table border="0" cellpadding="4" cellspacing="0" width="100%" class="aldi confirm_box" style="margin: 10px auto;">
+        <tr>
+            <td class="unlock_icon e"><img src="${URLUtils.webRoot()}/images/icon_unlocked.png" width="16" height="15" alt="" border="0"/></td>
+            <td class="infobox_title adjust_td_padding" width="100%">
+             <p><isprint value="${Resource.msg('oversized_count.error', 'smartinsight_config', null)}" /></p>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<iscomment>Define columnName localization</iscomment>
+<isset name="placeholder" scope="page" value="${Resource.msg('form.placeholder.text', 'smartinsight_config', null)}" />
+<form action="${URLUtils.continueURL()}" method="post" id="smartInsightConf">
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+        <td width="100%" class="table_title w e s"><isprint value="${Resource.msg('smartinsightconfig.page.title', 'smartinsight_config', null)}" /></td>
+    </tr>
+    <tr>
+        <td class="table_title_description w e s" nowrap="nowrap">
+            <p><isprint value="${Resource.msg('page.description', 'smartinsight_config', null)}" /></p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <table cellspacing="0" cellpadding="0" border="0" width="100%" class="w e s">
+            <tr>
+                <td colspan="2">
+                    <table border="0" cellpadding="4" cellspacing="0" width="100%" class="infobox_locale s w e">
+                        <tr>
+                            <td class="infobox_item bold" nowrap="nowrap">
+                                <isprint value="${Resource.msg('form.mapped.fields.text', 'forms', null)}" />
+                                    &middot;
+                                <a href="#" id="addField"><isprint value="${Resource.msg('form.addFields', 'forms', null)}" /></a>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+
+            <iscomment>Populate the form if we already have stored settings</iscomment>
+
+            <isif condition="${!empty(pdict.StoredConfiguration) && !empty(pdict.StoredConfiguration.mappedFields)}">
+                <tr>
+                    <td class="fielditem2" nowrap="nowrap" id="left">
+                    <isscript>
+                        var fid = 0;
+                    </isscript>
+                    <isloop items="${pdict.StoredConfiguration.mappedFields}" var="form">
+                    <isscript>
+                        fid++;
+                    </isscript>
+                        <div id="l" class="dynamic-field" data-id="${fid.toString()}">
+                           <select name="${pdict.CurrentForms.smartinsight_config.mappedField.htmlName}" id="${pdict.CurrentForms.smartinsight_config.mappedField.htmlName}">
+                                <option>${Resource.msg('form.available.elements.option', 'forms', null)}</option>
+                            <isif condition="${!empty(pdict.AvailableElements)}">
+                                <isloop items="${pdict.AvailableElements}" var="element">
+                                    <option value="${element}" <isif condition="${form.field == element}">selected="selected"</isif>><isprint value="${element}" /></option>
+                                </isloop>
+                            </isif>
+                           </select>
+                           <span class="star">*</span>
+                           <input type="checkbox" value="${fid - 1}" name="${pdict.CurrentForms.smartinsight_config.removeField.htmlName}" id="${pdict.CurrentForms.smartinsight_config.removeField.htmlName}" />
+                           <isprint value="${Resource.msg('form.remove.checkbox', 'forms', null)}" />
+                           <p class="red error"></p>
+                        </div>
+                    </isloop>
+                    </td>
+                    <td class="table_detail" width="100%" id="right">
+                    <isscript>
+                        var fid = 0;
+                    </isscript>
+                    <isloop items="${pdict.StoredConfiguration.mappedFields}" var="form">
+                    <isscript>
+                        fid++;
+                    </isscript>
+                        <div id="r" class="dynamic-field" data-id="${fid.toString()}">
+                            <input type="text" placeholder="${placeholder}" value="${form.placeholder}" name="${pdict.CurrentForms.smartinsight_config.placeholder.htmlName}" id="${pdict.CurrentForms.smartinsight_config.placeholder.htmlName}" class="inputfield_en w100" />
+                            <p class="red error"></p>
+                        </div>
+                    </isloop>
+                    </td>
+                </tr>
+            <iselse>
+            <tr>
+                <td class="fielditem2" nowrap="nowrap" id="left">
+                    <div id="l" class="dynamic-field" data-id="1">
+                    <span>
+                       <select name="${pdict.CurrentForms.smartinsight_config.mappedField.htmlName}" id="${pdict.CurrentForms.smartinsight_config.mappedField.htmlName}">
+                            <option><isprint value="${Resource.msg('form.available.elements.option', 'forms', null)}" /></option>
+                            <isif condition="${!empty(pdict.AvailableElements)}">
+                                <isloop items="${pdict.AvailableElements}" var="element">
+                                    <option value="${element}"><isprint value="${element}" /></option>
+                                </isloop>
+                            </isif>
+                       </select>
+                    </span>
+                    <span class="star">*</span>
+                    <p class="red error"></p>
+                    </div>
+                </td>
+                <td class="table_detail" width="100%" id="right">
+                    <div id="r" class="dynamic-field" data-id="1">
+                        <input type="text" placeholder="${placeholder}" name="${pdict.CurrentForms.smartinsight_config.placeholder.htmlName}" id="${pdict.CurrentForms.smartinsight_config.placeholder.htmlName}" class="inputfield_en w100" />
+                    <p class="red error"></p>
+                    </div>
+                </td>
+            </tr>
+            </isif>
+            </table>
+            <table class="w e s" width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                    <td align="right">
+                        <table border="0" cellspacing="4" cellpadding="0">
+                            <tr>
+                                <td class="button"><button type="submit" name="${pdict.CurrentForms.smartinsight_config.save.htmlName}" id="${pdict.CurrentForms.smartinsight_config.save.htmlName}" class="button"><isprint value="${Resource.msg('form.apply', 'forms', null)}" /></button></td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</form>
+</isif>
+
+<isscript>
+    var form_args = JSON.stringify({
+                        mappedField_parent : "#left",
+                        mappedField_name : pdict.CurrentForms.smartinsight_config.mappedField.htmlName,
+                        mappedField_placeholder : Resource.msg('form.available.elements.option', 'forms', null),
+                        placeholder_parent : "#right",
+                        placeholder_name : pdict.CurrentForms.smartinsight_config.placeholder.htmlName,
+                        placeholder_placeholder : Resource.msg('form.placeholder.text', 'smartinsight_config', null),
+                        removeFields_placeholder : Resource.msg('form.removeFields.text', 'forms', null),
+                        elementsCount : pdict.AvailableElementsCount
+                    });
+    var selectOpt = pdict.AvailableElementsJSON;
+    var totalStoredFields = !empty(pdict.StoredConfiguration.mappedFields) ? pdict.StoredConfiguration.mappedFields.length : 0 ;
+</isscript>
+<script type="text/javascript"><isinclude template="resources/emarsys_resources"/></script>
+<script>
+    var fieldsInfo = <isprint value="${form_args}" encoding="off"/>;
+    var options = <isprint value="${selectOpt}" encoding="off"/>;
+    var totalFields = <isprint value="${totalStoredFields}" encoding="off"/>;
+</script>
+<script src="${URLUtils.staticURL('../js/main.js')}"></script>
+<script>
+    Emarsys.add(fieldsInfo, options);
+    Emarsys.validateSmartInsight("form#smartInsightConf", fieldsInfo);
+</script>
+</isdecorate>

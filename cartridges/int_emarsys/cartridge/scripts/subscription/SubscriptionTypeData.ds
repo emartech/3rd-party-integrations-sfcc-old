@@ -1,0 +1,37 @@
+/**
+* Demandware Script File
+* to read subscription type data from CO
+*
+*	@input SubscriptionType : String
+*   @output Strategy : String
+*   @output ExternalEvent : String
+*   @output ExternalEventAfterConfirmation : String
+*
+*/
+
+var object = require("dw/object"),
+	logger = require("dw/system/Logger");
+
+function execute( args : PipelineDictionary ) : Number
+{
+	try {
+		var type = args.SubscriptionType,
+	    	co = object.CustomObjectMgr.getCustomObject("EmarsysNewsletterSubscription", type);
+	    	
+	    if (co.custom.optInStrategy) {
+	    	args.Strategy = co.custom.optInStrategy;
+	    	args.ExternalEvent = co.custom.optInExternalEvent;
+	    	args.ExternalEventAfterConfirmation = co.custom.optInExternalEventAfterConfirmation;
+	    } else {
+	    	args.Strategy = null;
+	    	args.ExternalEvent = null;
+	    	args.ExternalEventAfterConfirmation = null;
+	    }
+	} catch(err) {
+		// log error message in case something goes wrong
+		logger.error("[SubscriptionTypeData.ds #" + err.lineNumber + "] - ***Emarsys subscrition type data error message: " + err);
+		return PIPELET_ERROR;
+	}
+
+    return PIPELET_NEXT;
+}

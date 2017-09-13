@@ -1,0 +1,51 @@
+/**
+*	Upload Profiles CSV file to WebDav
+*
+*	@input URL : String
+*	@input Username : String
+*	@input Password : String
+*	@input FileName : String
+*	@input FolderName : String
+*	@output ErrorMsg : String
+*
+*/
+var system   = require("dw/system"),
+    net      = require("dw/net"),
+    io       = require("dw/io"),
+    logger   = require("dw/system/Logger");
+
+function execute( args : PipelineDictionary ) : Number
+{
+    try {
+        var URL : String      = args.URL,
+            Username : String = args.Username,
+            Password : String = args.Password;
+
+        var CSVFileName : String   = args.FileName,
+            CSVFolderName : String = args.FolderName,
+            CSVFilePath : String   = dw.io.File.IMPEX + '/src/'+ CSVFolderName + '/' + CSVFileName + '.csv',
+            CSVFile : dw.io.File   = new io.File(CSVFilePath);
+
+        var WebDAVFilePath = '/'+ CSVFileName +'.csv',
+            WebDAVClient : dw.net.WebDAVClient = new net.WebDAVClient(URL, Username, Password);
+
+        if(CSVFile.exists()){
+            WebDAVClient.put(WebDAVFilePath, CSVFile);
+            if(WebDAVClient.succeeded()){
+                return PIPELET_NEXT;
+            } else {
+                args.ErrorMsg = "An error occured with status code " + WebDAVClient.statusCode;
+                logger.error("[UploadProfilesCSVToWebDAV.ds] - ***Emarsys contact info csv upload to WebDAV error code: {0} - Error message: {1}", WebDAVClient.statusCode, WebDAVClient.statusText);
+                return PIPELET_ERROR;
+            }
+        } else {
+            args.ErrorMsg = 'CSV file was not found';
+            logger.error("[UploadProfilesCSVToWebDAV.ds] - ***Emarsys contact info csv upload to WebDAV error message: " + 'CSV file was not found');
+            return PIPELET_ERROR;
+        }
+    } catch (err){
+        args.ErrorMsg = err.toString();
+        logger.error("[UploadProfilesCSVToWebDAV.ds #" + err.lineNumber + "] - ***Emarsys contact info csv upload to WebDAV error message: " + err);
+        return PIPELET_ERROR;
+    }
+}

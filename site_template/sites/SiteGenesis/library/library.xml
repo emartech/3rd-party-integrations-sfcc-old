@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<library xmlns="http://www.demandware.com/xml/impex/library/2006-10-31" library-id="SiteGenesisSharedLibrary">
+
+    <content content-id="emarsys-double-opt-in-thank-you-page">
+        <display-name xml:lang="x-default">Double Opt-in Thank You Page</display-name>
+        <online-flag>true</online-flag>
+        <searchable-flag>false</searchable-flag>
+        <page-attributes/>
+        <custom-attributes>
+            <custom-attribute attribute-id="body" xml:lang="x-default">&lt;h1&gt;Newsletter registration completed&lt;/h1&gt;&#13;
+&lt;p&gt;Thank you for your confirmation! You have now successfully subscribed to our newsletter. From now on, you'll be the first to learn about new events, white papers, or solution tips.&lt;/p&gt;&#13;
+&lt;h6&gt;In case you would like to opt-out again, please use unsubscribe links provided in the newsletter.&lt;/h6&gt;</custom-attribute>
+        </custom-attributes>
+    </content>
+
+</library>

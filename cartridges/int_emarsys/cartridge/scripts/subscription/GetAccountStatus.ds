@@ -1,0 +1,65 @@
+/**
+* Demandware Script File
+* which handles call to Emarsys to check if account with given email already exists or it has empty fields in it
+*
+*
+*   @input Email : String
+*   @output Status : String
+*
+*/
+var logger = require("dw/system/Logger"),
+	util =require("dw/util");
+
+function execute( args : PipelineDictionary ) : Number
+{
+
+    var emarsysHelper : Object = new (require("./../util/EmarsysHelper"))(),
+		contactData,
+		request : Object = new Object();
+	
+	try {
+		request = {
+			"keyId": "3",
+			"keyValues": [args.Email],
+			"fields" : ["31"]
+		}
+		
+		// call to get contact data on Emarsys
+		contactData = emarsysHelper.triggerAPICall("emarsys.api", "contact/getdata", request, "POST");
+		
+		if (contactData.status !== "OK") {
+			logger.error("Get data error:" + contactData.error + "] - ***Emarsys error message: " + contactData.errorMessage);
+			return PIPELET_ERROR;
+		}
+		
+	    var dataObj = JSON.parse(contactData.object);
+	    
+	    var errors = dataObj.data.errors;
+	    
+	    if (errors.length > 0) {
+	    	var error = errors[0];
+	    	// check if account exists, error code 2008 means that account wasn't created yet
+	    	if (error.errorCode == "2008") {
+	    		args.Status = "NOT REGISTERED";
+	    	}
+	    } else {
+	    	var dataResults = dataObj.data.result,
+	    		results = dataResults[0];
+	    	
+	    	// depending on optIn value (2 = false) set corresponding status
+	    	if (results["31"] == 2) {
+	    		args.Status = "NOT FILLED";
+	    	} else {
+	    		args.Status = "FILLED";
+	    	}
+	    }
+	    
+	} catch(err) {
+		// log error message in case something goes wrong
+		logger.error("[GetAccountStatus.ds #" + err.lineNumber + "] - ***Emarsys get contact data error message: " + err);
+		return PIPELET_ERROR;
+	}
+
+    return PIPELET_NEXT;
+}
+

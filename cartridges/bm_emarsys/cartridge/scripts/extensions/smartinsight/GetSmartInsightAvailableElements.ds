@@ -1,0 +1,43 @@
+/**
+* Demandware Script File
+* To get available elements and create a list with them
+*
+*
+*   @output AvailableElementsList : Array
+*   @output AvailableElementsJSON : String
+*   @output AvailableElementsCount : Number
+*   @output Success : Boolean
+*   @output Errors : Object
+*
+*/
+
+var logger = require("dw/system/Logger"),
+	web = require("dw/web");
+
+function execute( args : PipelineDictionary ) : Number
+{
+	try {
+		// get collection of elements stored in custom preference
+	    var availableElements = dw.system.Site.current.preferences.custom.emarsysSmartInsightAvailableElements,
+	    	elementsList : Array = new Array();
+
+		args.AvailableElementsList = availableElements;
+
+	    for each (var element in availableElements) {
+	    	elementsList.push({name: element});	// put each value in the list
+	    }
+
+		args.AvailableElementsJSON = JSON.stringify({ selectOptions : elementsList });
+		args.AvailableElementsCount = availableElements.length;
+
+	} catch(err) {
+		// log error message in case something goes wrong
+		logger.error("[GetSmartInsightAvailableElements.ds #" + err.lineNumber + "] - ***Get elements error message: " + err);
+
+    	args.Success = false;
+    	args.Errors = {"name": web.Resource.msg("get.elements.error", "emails_configuration", null), "body": web.Resource.msg("contact.administrator", "emails_configuration", null)};
+
+    	return PIPELET_ERROR;
+	}
+    return PIPELET_NEXT;
+}

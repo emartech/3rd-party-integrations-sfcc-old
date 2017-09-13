@@ -1,0 +1,11 @@
+<!--- TEMPLATENAME: emarsys_datasubmitted.isml --->
+<iscontent type="text/html" charset="UTF-8" compact="true"/>
+<iscache type="relative" hour="24"/>
+<isinclude template="util/modules"/>
+
+<isdecorate template="content/content/pt_content">
+    <div class="show-confirmation-message">
+       <h1>${Resource.msg("subscription.data.submitted", "emarsys", null)}</h1>
+       <p>${Resource.msg("subscription.confirmation.link.note", "emarsys", null)}</p>
+    </div>
+</isdecorate>

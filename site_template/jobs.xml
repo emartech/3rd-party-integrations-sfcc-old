@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jobs xmlns="http://www.demandware.com/xml/impex/jobs/2015-07-01">
+    <job job-id="Emarsys-ExportOrders" priority="0">
+        <description/>
+        <parameters/>
+        <flow>
+            <context site-id="SiteGenesis"/>
+            <step step-id="EmarsysExports-SmartInsight" type="ExecutePipeline" enforce-restart="false">
+                <description/>
+                <parameters>
+                    <parameter name="ExecutePipeline.Pipeline">EmarsysExports-SmartInsight</parameter>
+                </parameters>
+            </step>
+        </flow>
+        <rules/>
+        <triggers>
+            <run-once enabled="false">
+                <date>2017-03-21Z</date>
+                <time>13:45:00.000Z</time>
+            </run-once>
+        </triggers>
+    </job>
+
+    <job job-id="Emarsys-Init-Database" priority="0">
+        <description>Initialize Emarsys Database</description>
+        <parameters/>
+        <flow>
+            <context site-id="SiteGenesis"/>
+            <step step-id="ExportCustomerInfoAsCSV" type="ExecutePipeline" enforce-restart="false">
+                <description/>
+                <parameters>
+                    <parameter name="ExecutePipeline.Pipeline">DBLoad-ExportCustomerInfo</parameter>
+                </parameters>
+            </step>
+            <step step-id="CreateAutoImportProfile" type="ExecutePipeline" enforce-restart="false">
+                <description/>
+                <parameters>
+                    <parameter name="ExecutePipeline.Pipeline">DBLoad-CreateAutoImportProfile</parameter>
+                </parameters>
+            </step>
+            <step step-id="UploadCustomerInfoToWebDAV" type="ExecutePipeline" enforce-restart="false">
+                <description/>
+                <parameters>
+                    <parameter name="ExecutePipeline.Pipeline">DBLoad-UploadCustomerInfoToWebDAV</parameter>
+                </parameters>
+            </step>
+        </flow>
+        <rules/>
+        <triggers>
+            <run-once enabled="false">
+                <date>2017-03-16Z</date>
+                <time>13:59:35.000Z</time>
+            </run-once>
+        </triggers>
+    </job>
+
+    <job job-id="Emarsys-Predict" priority="0">
+        <description>Export product catalog in CSV format and upload to FTP location</description>
+        <parameters/>
+        <flow>
+            <context site-id="SiteGenesis"/>
+            <step step-id="Emarsys-ExportProductCatalog" type="ExecutePipeline" enforce-restart="false">
+                <description>Export product catalog in CSV format and upload to FTP location</description>
+                <parameters>
+                    <parameter name="ExecutePipeline.Pipeline">EmarsysExports-Predict</parameter>
+                </parameters>
+            </step>
+        </flow>
+        <rules/>
+        <triggers>
+            <run-once enabled="false">
+                <date>2017-03-21Z</date>
+                <time>13:46:48.000Z</time>
+            </run-once>
+        </triggers>
+    </job>
+
+    <job job-id="Emarsys-SendShippingEmails" priority="0">
+        <description/>
+        <parameters/>
+        <flow>
+            <context site-id="SiteGenesis"/>
+            <step step-id="SendShippingConfirmationEmails" type="ExecutePipeline" enforce-restart="false">
+                <description>Send a confirmation emails through campaign on Emarsys</description>
+                <parameters>
+                    <parameter name="ExecutePipeline.Pipeline">EmarsysEmails-ShippingConfirmation</parameter>
+                </parameters>
+            </step>
+        </flow>
+        <rules/>
+        <triggers>
+            <run-once enabled="false">
+                <date>2017-03-16Z</date>
+                <time>14:07:34.000Z</time>
+            </run-once>
+        </triggers>
+    </job>
+
+    <job job-id="Emarsys-Setup" priority="0">
+        <description>Setup job for Emarsys implementation.</description>
+        <parameters/>
+        <flow>
+            <context site-id="SiteGenesis"/>
+            <step step-id="GetAvailableProfileFields" type="ExecutePipeline" enforce-restart="false">
+                <description>Retrieve all profile fields from Emarsys</description>
+                <parameters>
+                    <parameter name="ExecutePipeline.Pipeline">Emarsys-GetAvailableProfileFields</parameter>
+                </parameters>
+            </step>
+            <step step-id="GetAvailableEvents" type="ExecutePipeline" enforce-restart="false">
+                <description/>
+                <parameters>
+                    <parameter name="ExecutePipeline.Pipeline">Emarsys-GetAvailableEvents</parameter>
+                </parameters>
+            </step>
+            <step step-id="GetSourceID" type="ExecutePipeline" enforce-restart="false">
+                <description>Get source id on Emarsys side</description>
+                <parameters>
+                    <parameter name="ExecutePipeline.Pipeline">Emarsys-GetSourceID</parameter>
+                </parameters>
+            </step>
+            <step step-id="CreateSingleChoiceValueMapping" type="ExecutePipeline" enforce-restart="false">
+                <description>Create Single Choice Value Mapping</description>
+                <parameters>
+                    <parameter name="ExecutePipeline.Pipeline">DBLoad-CreateSingleChoiceValueMapping</parameter>
+                </parameters>
+            </step>
+        </flow>
+        <rules>
+            <on-running runtime-threshold="10m" enabled="true">
+                <mark-job-as-hanging/>
+                <send-mail>
+                    <from>noreply@osfglobalservices13sandbox.com</from>
+                    <to>ciprian.gheorghite@osf-global.com</to>
+                </send-mail>
+            </on-running>
+            <on-retry enabled="false">
+                <send-mail>
+                    <from>noreply@osfglobalservices13sandbox.com</from>
+                    <to>ciprian.gheorghite@osf-global.com</to>
+                </send-mail>
+            </on-retry>
+            <on-exit status="ERROR" enabled="false">
+                <send-mail>
+                    <from>noreply@osfglobalservices13sandbox.com</from>
+                    <to>ciprian.gheorghite@osf-global.com</to>
+                </send-mail>
+            </on-exit>
+        </rules>
+        <triggers>
+            <run-recurring enabled="false">
+                <recurrence>
+                    <date-from>2017-03-19Z</date-from>
+                    <date-to>2017-08-12Z</date-to>
+                    <start-time>04:00:00.000Z</start-time>
+                    <interval>1w</interval>
+                    <day-of-week>
+                        <weekday>Sunday</weekday>
+                    </day-of-week>
+                </recurrence>
+                <rules>
+                    <on-exit status="ERROR">
+                        <disable-trigger/>
+                    </on-exit>
+                </rules>
+            </run-recurring>
+        </triggers>
+    </job>
+
+</jobs>

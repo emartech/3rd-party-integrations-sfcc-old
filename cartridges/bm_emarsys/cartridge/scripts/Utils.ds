@@ -1,0 +1,47 @@
+/**
+* Rendering BM page tabs
+*/
+
+var system = require('dw/system'),
+    util   = require('dw/util'),
+    web    = require('dw/web');
+
+
+function BuildSubNavURL(pipeline : String, paramName : String, paramVal : String, menuName : String, mainMenuName : String, currentMenuItem : String) {
+    return pipeline + "?" + "CurrentMenuItemId=" + currentMenuItem + "&menuname=" + menuName + "&mainmenuname=" + mainMenuName + "&" + paramName + "=" + paramVal;
+}
+
+function BuildSubNav(module : String, moduleParam : String, menuName : String, currentMenuItem : String) : Object {
+
+    //Pages
+    var NewsletterConfig : String = "EmarsysConfig-Subscription";
+    var mainMenuName : String = "Emarsys Integration";
+
+    switch(module) {
+
+     //Reports
+     case "newsletter-configuration":
+
+        var Navigation : Array = new util.ArrayList(
+
+        [BuildSubNavURL(NewsletterConfig, moduleParam, "footer", menuName, mainMenuName, currentMenuItem),
+         web.Resource.msg("nc.module.footer.title", "newsletter_configuration", null),
+         "footer"],
+
+        [BuildSubNavURL(NewsletterConfig, moduleParam, "checkout", menuName, mainMenuName, currentMenuItem),
+         web.Resource.msg("nc.module.checkout.title", "newsletter_configuration", null),
+         "checkout"],
+         
+        [BuildSubNavURL(NewsletterConfig, moduleParam, "account", menuName, mainMenuName, currentMenuItem),
+         web.Resource.msg("nc.module.account.title", "newsletter_configuration", null),
+         "account"]
+
+        );
+
+     break;
+
+    }
+
+    return Navigation;
+
+}

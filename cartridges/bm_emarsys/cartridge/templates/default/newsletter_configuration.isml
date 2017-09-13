@@ -1,0 +1,333 @@
+<isdecorate template="page_wrapper">
+<iscontent type="text/html" charset="UTF-8">
+<isinclude template="inc/Modules">
+<link rel="stylesheet" type="text/css" href="${URLUtils.staticURL('css/main.css')}">
+
+<iscomment>Get the selected tab</iscomment>
+<isif condition="${!empty(pdict.InputTab)}">
+    <isset name="tab" scope="page" value="${pdict.InputTab}" />
+<iselse>
+    <isif condition="${pdict.CurrentHttpParameterMap.tab != ''}">
+        <isset name="tab" scope="page" value="${pdict.CurrentHttpParameterMap.tab}" />
+    <iselse>
+        <isset name="tab" scope="page" value="footer" />
+    </isif>
+</isif>
+
+
+<iscomment>build page navigation</iscomment>
+<isif condition="${!empty(pdict.PageMenu)}">
+<table border="0" cellspacing="0" cellpadding="0">
+    <tr>
+     <isloop items="${pdict.PageMenu}" var="menuItem">
+        <isif condition="${tab == menuItem[2]}">
+            <td class="w e n table_tabs_en_background" nowrap="nowrap">
+                ${menuItem[1]}
+            </td>
+        <iselse>
+            <isif condition="${tab == '' && menuItem[2] == 'footer'}">
+                <td class="w e n table_tabs_en_background" nowrap="nowrap">
+                    ${menuItem[1]}
+                </td>
+            <iselse/>
+                <td class="e n s table_tabs_dis_background" nowrap="nowrap">
+                    <a class="table_tabs_dis" href="${menuItem[0]}">
+                        ${menuItem[1]}
+                    </a>
+                </td>
+            </isif>
+        </isif>
+     </isloop>
+    </tr>
+</table>
+</isif>
+
+<isif condition="${!empty(pdict.Errors)}">
+  <table border="0" cellspacing="0" cellpadding="4" width="100%" class="error_box n s e w">
+      <tr valign="top">
+          <td class="error_icon top e"><img src="${URLUtils.staticURL('images/error.gif')}" width="16" height="15" alt="" border="0"/></td>
+          <td class="error top" width="100%">
+          <p><isprint value="${pdict.Errors.name}" />: <isprint value="${pdict.Errors.body}" />.<br/>
+          </td>
+      </tr>
+  </table>
+<iselse>
+
+<isif condition="${!empty(pdict.Success) && pdict.Success == true}">
+    <table border="0" cellpadding="4" cellspacing="0" width="100%" class="aldi confirm_box" style="margin: 10px auto;">
+        <tr>
+          <td class="lockedit_icon e"><img src="${URLUtils.staticURL('images/icon_lockedit.png')}" width="16" height="15" alt="" border="0"/></td>
+            <td class="infobox_title adjust_td_padding" width="100%">
+             <p><isprint value="${Resource.msg('nc.save.success', 'newsletter_configuration', null)}" /></p>
+            </td>
+        </tr>
+    </table>
+<iselseif condition="${!empty(pdict.Success) && pdict.Success == false}">
+    <table border="0" cellpadding="4" cellspacing="0" width="100%" class="aldi confirm_box" style="margin: 10px auto;">
+        <tr>
+            <td class="unlock_icon e"><img src="${URLUtils.staticURL('images/icon_unlocked.png')}" width="16" height="15" alt="" border="0"/></td>
+            <td class="infobox_title adjust_td_padding" width="100%">
+             <p><isprint value="${Resource.msg('nc.save.error', 'newsletter_configuration', null)}" /></p>
+            </td>
+        </tr>
+    </table>
+</isif>
+
+<isif condition="${tab == '' || tab == 'footer'}">
+<form action="${URLUtils.continueURL()}" method="post" id="configFooter">
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+        <td width="100%" class="table_title w e s"><isprint value="${Resource.msg('nc.page.title', 'newsletter_configuration', null)}" /></td>
+    </tr>
+    <tr>
+        <td class="table_title_description w e s" nowrap="nowrap">
+            <p><isprint value="${Resource.msg('nc.page.description', 'newsletter_configuration', null)}" /></p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <table cellspacing="0" cellpadding="0" border="0" width="100%" class="w e s">
+
+                <tr>
+                    <td class="fielditem2" nowrap="nowrap">
+                        <span data-dw-name="ID:" data-dw-attrid="ID" data-dw-tooltip="Channel.ID">
+                           <isprint value="${Resource.msg('nc.form.optin_strategy.label', 'newsletter_configuration', null)}" />:
+                        </span>
+                        <span class="star">*</span>
+                    </td>
+                    <td class="table_detail" width="100%">
+                        <select name="${pdict.CurrentForms.subscriptions_config_footer.footerSubscriptionStrategy.htmlName}" id="${pdict.CurrentForms.subscriptions_config_footer.footerSubscriptionStrategy.htmlName}" class="subscriptionStrategy">
+                            <option value="1" <isif condition="${pdict.StoredConfiguration.optInStrategy == 1}">selected="selected"</isif>><isprint value="${Resource.msg('nc.single_optin_strategy.name', 'newsletter_configuration', null)}" /></option>
+                            <option value="2" <isif condition="${pdict.StoredConfiguration.optInStrategy == 2}">selected="selected"</isif>><isprint value="${Resource.msg('nc.double_optin_strategy.name', 'newsletter_configuration', null)}" /></option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="fielditem2" nowrap="nowrap">
+                        <span data-dw-name="Name:" data-dw-attrid="name" data-dw-tooltip="Channel.name">
+                            <isprint value="${Resource.msg('nc.form.single_optin_event.label', 'newsletter_configuration', null)}" />:
+                        </span>
+                        <span class="star hide">*</span>
+                    </td>
+                    <td class="table_detail">
+                        <select name="${pdict.CurrentForms.subscriptions_config_footer.footerExternalEventOptin.htmlName}" id="${pdict.CurrentForms.subscriptions_config_footer.footerExternalEventOptin.htmlName}" class="externalEventOptin">
+                            <option label="${Resource.msg('nc.noevent.option', 'newsletter_configuration', null)}" value="" >${Resource.msg('nc.noevent.option', 'newsletter_configuration', null)}</option>
+                            <isif condition="${!empty(pdict.AvailableEvents)}">
+                                <isloop items="${pdict.AvailableEvents}" var="event">
+                                    <option value="${event.id}" <isif condition="${pdict.StoredConfiguration.optInExternalEvent == event.id}">selected="selected"</isif>><isprint value="${event.name}" /></option>
+                                </isloop>
+                            </isif>
+                        </select>
+                        <span class="red error"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="fielditem2" nowrap="nowrap">
+                        <span data-dw-name="Name:" data-dw-attrid="name" data-dw-tooltip="Channel.name">
+                            <isprint value="${Resource.msg('nc.form.double_optin_event.label', 'newsletter_configuration', null)}" />:
+                        </span>
+                    </td>
+                    <td class="table_detail">
+                        <select name="${pdict.CurrentForms.subscriptions_config_footer.footerExternalEventOptinAfterConfirmation.htmlName}" id="${pdict.CurrentForms.subscriptions_config_footer.footerExternalEventOptinAfterConfirmation.htmlName}">
+                            <option label="${Resource.msg('nc.noevent.option', 'newsletter_configuration', null)}" value="" >${Resource.msg('nc.noevent.option', 'newsletter_configuration', null)}</option>
+                            <isif condition="${!empty(pdict.AvailableEvents)}">
+                                <isloop items="${pdict.AvailableEvents}" var="event">
+                                    <option value="${event.id}" <isif condition="${pdict.StoredConfiguration.optInExternalEventAfterConfirmation == event.id}">selected="selected"</isif>><isprint value="${event.name}" /></option>
+                                </isloop>
+                            </isif>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+            <table class="w e s" width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                    <td align="right">
+                        <table border="0" cellspacing="4" cellpadding="0">
+                            <tr>
+                                <td class="button"><button type="submit" name="${pdict.CurrentForms.subscriptions_config_footer.config_footer.htmlName}" class="button"><isprint value="${Resource.msg('nc.apply.button.name', 'newsletter_configuration', null)}" /></button></td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+<input type="hidden" name="${pdict.CurrentForms.subscriptions_config_footer.tab.htmlName}" value="${tab}" />
+</form>
+<iselseif condition="${!empty(tab) && tab == 'checkout'}">
+<form action="${URLUtils.continueURL()}" method="post" id="configCheckout">
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+        <td width="100%" class="table_title w e s"><isprint value="${Resource.msg('nc.page.title', 'newsletter_configuration', null)}" /></td>
+    </tr>
+    <tr>
+        <td class="table_title_description w e s" nowrap="nowrap">
+            <p><isprint value="${Resource.msg('nc.page.description', 'newsletter_configuration', null)}" /></p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <table cellspacing="0" cellpadding="0" border="0" width="100%" class="w e s">
+
+                <tr>
+                    <td class="fielditem2" nowrap="nowrap">
+                        <span data-dw-name="ID:" data-dw-attrid="ID" data-dw-tooltip="Channel.ID">
+                           <isprint value="${Resource.msg('nc.form.optin_strategy.label', 'newsletter_configuration', null)}" />:
+                        </span>
+                        <span class="star">*</span>
+                    </td>
+                    <td class="table_detail" width="100%">
+                        <select name="${pdict.CurrentForms.subscriptions_config_checkout.checkoutSubscriptionStrategy.htmlName}" id="${pdict.CurrentForms.subscriptions_config_checkout.checkoutSubscriptionStrategy.htmlName}" class="subscriptionStrategy">
+                            <option value="1" <isif condition="${pdict.StoredConfiguration.optInStrategy == 1}">selected="selected"</isif>><isprint value="${Resource.msg('nc.single_optin_strategy.name', 'newsletter_configuration', null)}" /></option>
+                            <option value="2" <isif condition="${pdict.StoredConfiguration.optInStrategy == 2}">selected="selected"</isif>><isprint value="${Resource.msg('nc.double_optin_strategy.name', 'newsletter_configuration', null)}" /></option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="fielditem2" nowrap="nowrap">
+                        <span data-dw-name="Name:" data-dw-attrid="name" data-dw-tooltip="Channel.name">
+                            <isprint value="${Resource.msg('nc.form.single_optin_event.label', 'newsletter_configuration', null)}" />:
+                        </span>
+                        <span class="star hide">*</span>
+                    </td>
+                    <td class="table_detail">
+                        <select name="${pdict.CurrentForms.subscriptions_config_checkout.checkoutExternalEventOptin.htmlName}" id="${pdict.CurrentForms.subscriptions_config_checkout.checkoutExternalEventOptin.htmlName}" class="externalEventOptin">
+                            <option label="${Resource.msg('nc.noevent.option', 'newsletter_configuration', null)}" value="" >${Resource.msg('nc.noevent.option', 'newsletter_configuration', null)}</option>
+                            <isif condition="${!empty(pdict.AvailableEvents)}">
+                                <isloop items="${pdict.AvailableEvents}" var="event">
+                                    <option value="${event.id}" <isif condition="${pdict.StoredConfiguration.optInExternalEvent == event.id}">selected="selected"</isif>><isprint value="${event.name}" /></option>
+                                </isloop>
+                            </isif>
+                        </select>
+                        <span class="red error"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="fielditem2" nowrap="nowrap">
+                        <span data-dw-name="Name:" data-dw-attrid="name" data-dw-tooltip="Channel.name">
+                            <isprint value="${Resource.msg('nc.form.double_optin_event.label', 'newsletter_configuration', null)}" />:
+                        </span>
+                    </td>
+                    <td class="table_detail">
+                        <select name="${pdict.CurrentForms.subscriptions_config_checkout.checkoutExternalEventOptinAfterConfirmation.htmlName}" id="${pdict.CurrentForms.subscriptions_config_checkout.checkoutExternalEventOptinAfterConfirmation.htmlName}">
+                            <option label="${Resource.msg('nc.noevent.option', 'newsletter_configuration', null)}" value="" >${Resource.msg('nc.noevent.option', 'newsletter_configuration', null)}</option>
+                            <isif condition="${!empty(pdict.AvailableEvents)}">
+                                <isloop items="${pdict.AvailableEvents}" var="event">
+                                    <option value="${event.id}" <isif condition="${pdict.StoredConfiguration.optInExternalEventAfterConfirmation == event.id}">selected="selected"</isif>><isprint value="${event.name}" /></option>
+                                </isloop>
+                            </isif>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+            <table class="w e s" width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                    <td align="right">
+                        <table border="0" cellspacing="4" cellpadding="0">
+                            <tr>
+                                <td class="button"><button type="submit" name="${pdict.CurrentForms.subscriptions_config_checkout.config_checkout.htmlName}" class="button"><isprint value="${Resource.msg('nc.apply.button.name', 'newsletter_configuration', null)}" /></button></td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+<input type="hidden" name="${pdict.CurrentForms.subscriptions_config_checkout.tab.htmlName}" value="${tab}" />
+</form>
+<iselseif condition="${!empty(tab) && tab == 'account'}">
+<form action="${URLUtils.continueURL()}" method="post" id="configAccount">
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+        <td width="100%" class="table_title w e s"><isprint value="${Resource.msg('nc.page.title', 'newsletter_configuration', null)}" /></td>
+    </tr>
+    <tr>
+        <td class="table_title_description w e s" nowrap="nowrap">
+            <p><isprint value="${Resource.msg('nc.page.description', 'newsletter_configuration', null)}" /></p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <table cellspacing="0" cellpadding="0" border="0" width="100%" class="w e s">
+
+                <tr>
+                    <td class="fielditem2" nowrap="nowrap">
+                        <span data-dw-name="ID:" data-dw-attrid="ID" data-dw-tooltip="Channel.ID">
+                           <isprint value="${Resource.msg('nc.form.optin_strategy.label', 'newsletter_configuration', null)}" />:
+                        </span>
+                        <span class="star">*</span>
+                    </td>
+                    <td class="table_detail" width="100%">
+                        <select name="${pdict.CurrentForms.subscriptions_config_account.accountSubscriptionStrategy.htmlName}" id="${pdict.CurrentForms.subscriptions_config_account.accountSubscriptionStrategy.htmlName}" class="subscriptionStrategy">
+                            <option value="1" <isif condition="${pdict.StoredConfiguration.optInStrategy == 1}">selected="selected"</isif>><isprint value="${Resource.msg('nc.single_optin_strategy.name', 'newsletter_configuration', null)}" /></option>
+                            <option value="2" <isif condition="${pdict.StoredConfiguration.optInStrategy == 2}">selected="selected"</isif>><isprint value="${Resource.msg('nc.double_optin_strategy.name', 'newsletter_configuration', null)}" /></option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="fielditem2" nowrap="nowrap">
+                        <span data-dw-name="Name:" data-dw-attrid="name" data-dw-tooltip="Channel.name">
+                            <isprint value="${Resource.msg('nc.form.single_optin_event.label', 'newsletter_configuration', null)}" />:
+                        </span>
+                        <span class="star hide">*</span>
+                    </td>
+                    <td class="table_detail">
+                        <select name="${pdict.CurrentForms.subscriptions_config_account.accountExternalEventOptin.htmlName}" id="${pdict.CurrentForms.subscriptions_config_account.accountExternalEventOptin.htmlName}" class="externalEventOptin">
+                            <option label="${Resource.msg('nc.noevent.option', 'newsletter_configuration', null)}" value="" >${Resource.msg('nc.noevent.option', 'newsletter_configuration', null)}</option>
+                            <isif condition="${!empty(pdict.AvailableEvents)}">
+                                <isloop items="${pdict.AvailableEvents}" var="event">
+                                    <option value="${event.id}" <isif condition="${pdict.StoredConfiguration.optInExternalEvent == event.id}">selected="selected"</isif>><isprint value="${event.name}" /></option>
+                                </isloop>
+                            </isif>
+                        </select>
+                        <span class="red error"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="fielditem2" nowrap="nowrap">
+                        <span data-dw-name="Name:" data-dw-attrid="name" data-dw-tooltip="Channel.name">
+                            <isprint value="${Resource.msg('nc.form.double_optin_event.label', 'newsletter_configuration', null)}" />:
+                        </span>
+                    </td>
+                    <td class="table_detail">
+                        <select name="${pdict.CurrentForms.subscriptions_config_account.accountExternalEventOptinAfterConfirmation.htmlName}" id="${pdict.CurrentForms.subscriptions_config_account.accountExternalEventOptinAfterConfirmation.htmlName}">
+                            <option label="${Resource.msg('nc.noevent.option', 'newsletter_configuration', null)}" value="" >${Resource.msg('nc.noevent.option', 'newsletter_configuration', null)}</option>
+                            <isif condition="${!empty(pdict.AvailableEvents)}">
+                                <isloop items="${pdict.AvailableEvents}" var="event">
+                                    <option value="${event.id}" <isif condition="${pdict.StoredConfiguration.optInExternalEventAfterConfirmation == event.id}">selected="selected"</isif>><isprint value="${event.name}" /></option>
+                                </isloop>
+                            </isif>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+            <table class="w e s" width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                    <td align="right">
+                        <table border="0" cellspacing="4" cellpadding="0">
+                            <tr>
+                                <td class="button"><button type="submit" name="${pdict.CurrentForms.subscriptions_config_account.config_account.htmlName}" class="button"><isprint value="${Resource.msg('nc.apply.button.name', 'newsletter_configuration', null)}" /></button></td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+<input type="hidden" name="${pdict.CurrentForms.subscriptions_config_account.tab.htmlName}" value="${tab}" />
+</form>
+</isif>
+</isif>
+<script type="text/javascript">
+	<isinclude template="resources/emarsys_resources"/>
+	var totalFields = null;
+</script>
+<script src="${URLUtils.staticURL('../js/main.js')}"></script>
+<script>
+    Emarsys.validateSubscription();
+</script>
+
+</isdecorate>

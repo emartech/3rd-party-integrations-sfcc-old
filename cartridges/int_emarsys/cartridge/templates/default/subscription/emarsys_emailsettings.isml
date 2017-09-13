@@ -1,0 +1,28 @@
+<iscontent type="text/html" charset="UTF-8" compact="true"/>
+<isdecorate template="account/pt_account">
+<isinclude template="util/modules"/>
+<isif condition="${dw.system.Site.getCurrent().getCustomPreferenceValue('emarsysEnabled')}">
+	<a id="account_subscribe" class="button subscribe" href="#">${Resource.msg('emarsys.subscribe','emarsys',null)}</a>
+</isif>
+<a id="account_unsubscribe" class="button unsubscribe" href="${dw.web.URLUtils.url('EmarsysNewsletter-AccountUnsubscribe')}">${Resource.msg('nu.button.name','newsletter_unsubscribe',null)}</a>
+<div class="email-signup-wrapper" style="display: none;">
+    <h3>${Resource.msg('emarsys.signup','forms',null)}</h3>
+    <form action="${URLUtils.continueURL()}" method="post" name="${pdict.CurrentForms.emarsyssignup.htmlName}">
+        <fieldset>
+            <isinputfield formfield="${pdict.CurrentForms.emarsyssignup.emailAddress}" type="input"/>
+            <isinputfield formfield="${pdict.CurrentForms.emarsyssignup.firstName}" type="input"/>
+            <isinputfield formfield="${pdict.CurrentForms.emarsyssignup.lastName}" type="input"/>
+            <isinputfield formfield="${pdict.CurrentForms.emarsyssignup.address1}" type="input"/>
+            <isinputfield formfield="${pdict.CurrentForms.emarsyssignup.city}" type="input"/>
+            <isinputfield formfield="${pdict.CurrentForms.emarsyssignup.stateCode}" type="select"/>
+            <isinputfield formfield="${pdict.CurrentForms.emarsyssignup.postalCode}" type="input"/>
+            <isinputfield formfield="${pdict.CurrentForms.emarsyssignup.countryCode}" type="select"/>
+            <isinputfield formfield="${pdict.CurrentForms.emarsyssignup.gender}" type="radio"/>
+            <isinputfield formfield="${pdict.CurrentForms.emarsyssignup.phone}" type="input"/>
+            <div class="full-width">
+                <button class="button" type="submit" name="${pdict.CurrentForms.emarsyssignup.subscribe.htmlName}" value="${Resource.msg('emarsys.signupemail','forms',null)}"><span>${Resource.msg('emarsys.signupemail','forms',null)}</span></button>
+            </div>
+        </fieldset>
+    </form>
+</div>
+</isdecorate>

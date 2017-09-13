@@ -1,0 +1,72 @@
+/**
+* The script for managing newsletter subscription configuration
+*   @input  Config : Object
+*   @output Tab : String
+*   @output Success : Boolean
+*
+*/
+var system = require('dw/system'),
+    obj    = require('dw/object');
+
+function execute( args : PipelineDictionary ) : Number {
+
+
+    var config : Object = args.Config;
+    var configurationType,
+        optInStrategy,
+        optInExternalEvent,
+        optInExternalEventAfterConfirmation;
+
+    switch(config.triggeredAction.formId) {
+
+        default:
+        case 'config_footer':
+            optInStrategy = config.footerSubscriptionStrategy.value;
+            optInExternalEvent = config.footerExternalEventOptin.value;
+            optInExternalEventAfterConfirmation = config.footerExternalEventOptinAfterConfirmation.value;
+            configurationType = "footer";
+        break;
+
+        case 'config_checkout':
+            optInStrategy = config.checkoutSubscriptionStrategy.value;
+            optInExternalEvent = config.checkoutExternalEventOptin.value;
+            optInExternalEventAfterConfirmation = config.checkoutExternalEventOptinAfterConfirmation.value;
+            configurationType = "checkout";
+        break;
+
+        case 'config_account':
+            optInStrategy = config.accountSubscriptionStrategy.value;
+            optInExternalEvent = config.accountExternalEventOptin.value;
+            optInExternalEventAfterConfirmation = config.accountExternalEventOptinAfterConfirmation.value;
+            configurationType = "account";
+        break;
+    }
+
+    try {
+
+        var NewsletterConfigurationObject : obj.CustomObject = obj.CustomObjectMgr.getCustomObject("EmarsysNewsletterSubscription", configurationType);
+
+        if(NewsletterConfigurationObject == null) {
+            var CF : obj.CustomObject = obj.CustomObjectMgr.createCustomObject("EmarsysNewsletterSubscription", configurationType);
+            CF.custom.optInStrategy = optInStrategy;
+            CF.custom.optInExternalEvent = optInExternalEvent;
+            CF.custom.optInExternalEventAfterConfirmation = optInExternalEventAfterConfirmation;
+        } else {
+            obj.CustomObjectMgr.remove(NewsletterConfigurationObject);
+            var CF : obj.CustomObject = obj.CustomObjectMgr.createCustomObject("EmarsysNewsletterSubscription", configurationType);
+            CF.custom.optInStrategy = optInStrategy;
+            CF.custom.optInExternalEvent = optInExternalEvent;
+            CF.custom.optInExternalEventAfterConfirmation = optInExternalEventAfterConfirmation;
+        }
+
+        args.Success = true;
+        args.Tab = config.tab.value;
+
+    } catch (err) {
+        system.Logger.error("[SaveNewsletterConfig.ds #" + err.lineNumber + "] - ***Emarsys save newsletter configuration error message: " + err);
+        args.Success = false;
+        return PIPELET_ERROR;
+    }
+
+    return PIPELET_NEXT;
+}

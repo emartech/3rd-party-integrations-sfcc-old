@@ -1,0 +1,51 @@
+/**
+* The script for managing newsletter subscription configuration
+*   @input  CurrentTab : String
+*   @input  InputTab : String
+*   @input  CurrentMenuItemId : String
+*   @output PageMenu : Object
+*   @output AvailableEvents : Object
+*   @output StoredConfiguration : Object
+*   @output Errors : Object
+*
+*/
+var system = require('dw/system'),
+    util   = require('dw/util'),
+    web    = require('dw/web'),
+    obj    = require('dw/object');
+
+importScript("Utils.ds");
+
+function execute( args : PipelineDictionary ) : Number {
+
+    args.PageMenu = BuildSubNav("newsletter-configuration", "tab", web.Resource.msg('nc.page.title', 'newsletter_configuration', null), args.CurrentMenuItemId);
+    var UniqueObjectKey : String = "StoredEvents";
+    var ExternalEventsObject : obj.CustomObject = obj.CustomObjectMgr.getCustomObject("EmarsysExternalEvents", UniqueObjectKey);
+    var tab = !empty(args.InputTab) ? args.InputTab : args.CurrentTab;
+    var configurationType = !empty(tab) ? tab : "footer";
+    var NewsletterConfigurationObject : obj.CustomObject = obj.CustomObjectMgr.getCustomObject("EmarsysNewsletterSubscription", configurationType);
+
+    try {
+
+        if(!empty(ExternalEventsObject)) {
+            args.AvailableEvents = JSON.parse(ExternalEventsObject.custom.result);
+        } else {
+            args.Errors = { name : web.Resource.msg("nc.noevents.name", "newsletter_configuration", null), body : web.Resource.msg("nc.noevents.body", "newsletter_configuration", null) };
+        }
+
+        if(!empty(NewsletterConfigurationObject)) {
+            args.StoredConfiguration = NewsletterConfigurationObject.custom;
+        } else {
+            //If no settings are present, load defaults
+            var CF : obj.CustomObject = obj.CustomObjectMgr.createCustomObject("EmarsysNewsletterSubscription", configurationType);
+            CF.custom.optInStrategy = (configurationType == "footer" || configurationType == "account") ? "2" : "1";
+            args.StoredConfiguration = CF.custom;
+        }
+
+    } catch (err) {
+      system.Logger.error("[NewsletterSubscription.ds #" + err.lineNumber + "] - ***Emarsys newsletter configuration error message: " + err);
+      return PIPELET_ERROR;
+    }
+
+    return PIPELET_NEXT;
+}

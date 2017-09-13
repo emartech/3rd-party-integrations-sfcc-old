@@ -1,0 +1,107 @@
+/**
+* Demandware Script File
+* Script makes a call to Emarsys for updating a contact in double opt-in subscription
+*
+*   @input CurrentHttpParameterMap : Object
+*   @input ExternalEventAfterConfirmation : String
+*   @output ErrorMsg : String
+*
+*/
+
+var logger = require("dw/system/Logger");
+
+function execute( args : PipelineDictionary ) : Number
+{
+
+    var emarsysHelper : Object = new (require("./../util/EmarsysHelper"))(),
+		updateData,
+		triggerEvent,
+		updateRequest,
+		triggerRequest;
+		
+	var uid = args.CurrentHttpParameterMap.uid.stringValue;
+	
+	try {
+		// get data request
+		var getDataRequest = {
+			"keyId": "uid",
+			"keyValues": [uid]
+		};
+		
+		var getData = emarsysHelper.triggerAPICall("emarsys.api", "contact/getdata", getDataRequest, "POST");
+		
+		// parse getData response to get email
+		var email = null;
+		if (getData.status == "OK") {
+			var dataObj = JSON.parse(getData.object);
+			var	dataResults = dataObj.data.result;
+			if (dataResults) {
+			    var	results = dataResults[0];
+			    email = results["3"];
+			}
+		}
+		
+		if (email) {
+		    // request body to update a contact with optIn value set to true
+			updateRequest = {
+				"keyId": "uid",
+				"uid": uid,
+				"31": "1",
+				"3": email
+			};
+		} else {
+			var errors = dataObj.data.errors,
+				errorMsg = null;	// error message to display on a storefront
+			
+			if (errors && errors.length > 0) {
+				if (uid) {
+					errorMsg = errors[0].errorMsg;
+				} else {
+					errorMsg = dw.web.Resource.msg("subscription.no.uid", "emarsys", null);
+				}
+			}
+			
+			args.ErrorMsg = errorMsg;
+			logger.error(errorMsg);
+			return PIPELET_ERROR;
+		}
+		
+		if (!empty(updateRequest)) {
+			// if source id value exists add it to request
+			emarsysHelper.addSourceIdToRequest(updateRequest);
+			
+			updateData = emarsysHelper.triggerAPICall("emarsys.api", "contact", updateRequest, "PUT");
+				
+			if (updateData.status !== "OK") {
+				logger.error("[Update data error:" + updateData.error + "] - ***Emarsys error message: " + updateData.errorMessage);
+				args.ErrorMsg = dw.web.Resource.msg("subscription.update.error", "emarsys", null);
+				return PIPELET_ERROR;
+			}
+		}
+		
+		// external event id that will be triggered after updating a contact
+		var externalEventId = args.ExternalEventAfterConfirmation;
+		
+		if (externalEventId) {
+	    	var endpoint = "event/" + externalEventId + "/trigger";
+			
+			triggerRequest = {
+				"key_id": "uid",
+				"external_id": uid
+			};
+			
+			triggerEvent = emarsysHelper.triggerAPICall("emarsys.api", endpoint, triggerRequest, "POST");
+			
+			if (triggerEvent.status !== "OK") {
+				logger.error("[Triggere event error:" + triggerEvent.error + "] - ***Emarsys error message: " + triggerEvent.errorMessage);
+				return PIPELET_ERROR;
+			}
+		} 
+	} catch(err) {
+		// log error message in case something goes wrong
+		logger.error("[DoubleOptInSubscribe.ds #" + err.lineNumber + "] - ***Emarsys subscribe contact data error message: " + err);
+		return PIPELET_ERROR;
+	}
+
+    return PIPELET_NEXT;
+}

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<custom-objects xmlns="http://www.demandware.com/xml/impex/customobject/2006-10-31">
+    <custom-object type-id="EmarsysPredictConfig" object-id="predictConfig">
+        <object-attribute attribute-id="exportType">master</object-attribute>
+        <object-attribute attribute-id="mappedFields">[{"field":"product.ID","placeholder":"item"},{"field":"product.availability","placeholder":"available"},{"field":"product.name","placeholder":"title"},{"field":"product.url","placeholder":"link"},{"field":"product.image","placeholder":"image"},{"field":"product.categories","placeholder":"category"},{"field":"product.price","placeholder":"price"}]</object-attribute>
+    </custom-object>
+
+</custom-objects>

@@ -1,0 +1,224 @@
+<isdecorate template="page_wrapper">
+<iscontent type="text/html" charset="UTF-8">
+<isinclude template="inc/Modules">
+<link rel="stylesheet" type="text/css" href="${URLUtils.staticURL('css/main.css')}">
+
+<isif condition="${!empty(pdict.Errors)}">
+  <table border="0" cellspacing="0" cellpadding="4" width="100%" class="error_box n s e w">
+      <tr valign="top">
+          <td class="error_icon top e"><img src="${URLUtils.staticURL('images/error.gif')}" width="16" height="15" alt="" border="0"/></td>
+          <td class="error top" width="100%">
+          <p><isprint value="${pdict.Errors.name}" />: <isprint value="${pdict.Errors.body}" /><br/>
+          </td>
+      </tr>
+  </table>
+<iselse>
+
+<isif condition="${!empty(pdict.Success) && pdict.Success == true}">
+    <table border="0" cellpadding="4" cellspacing="0" width="100%" class="aldi confirm_box" style="margin: 10px auto;">
+        <tr>
+          <td class="lockedit_icon e"><img src="${URLUtils.staticURL('images/icon_lockedit.png')}" width="16" height="15" alt="" border="0"/></td>
+            <td class="infobox_title adjust_td_padding" width="100%">
+             <p><isprint value="${Resource.msg('dbload.success.true', 'dbload_configuration', null)}" /></p>
+            </td>
+        </tr>
+    </table>
+<iselseif condition="${!empty(pdict.Success) && pdict.Success == false}">
+    <table border="0" cellpadding="4" cellspacing="0" width="100%" class="aldi confirm_box" style="margin: 10px auto;">
+        <tr>
+            <td class="unlock_icon e"><img src="${URLUtils.staticURL('images/icon_unlocked.png')}" width="16" height="15" alt="" border="0"/></td>
+            <td class="infobox_title adjust_td_padding" width="100%">
+             <p><isprint value="${Resource.msg('dbload.success.false', 'dbload_configuration', null)}" />: <isprint value="${pdict.CustomError}"/></p>
+            </td>
+        </tr>
+    </table>
+</isif>
+
+<iscomment>Too many values in the dynamic form</iscomment>
+<div id="oversizedCount">
+    <table border="0" cellpadding="4" cellspacing="0" width="100%" class="aldi confirm_box" style="margin: 10px auto;">
+        <tr>
+            <td class="unlock_icon e"><img src="${URLUtils.staticURL('images/icon_unlocked.png')}" width="16" height="15" alt="" border="0"/></td>
+            <td class="infobox_title adjust_td_padding" width="100%">
+             <p><isprint value="${Resource.msg('dbload.oversized_count.error', 'dbload_configuration', null)}" /></p>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<iscomment>Define placeholder localization</iscomment>
+<isset name="placeholder" scope="page" value="${Resource.msg('orderconf.form.placeholder.text', 'emails_orderconfirmation', null)}" />
+<form action="${URLUtils.continueURL()}" method="post" id="configDBLoad">
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+        <td width="100%" class="table_title w e s"><isprint value="${Resource.msg('dbload.page.title', 'dbload_configuration', null)}" /></td>
+    </tr>
+    <tr>
+        <td class="table_title_description w e s" nowrap="nowrap">
+            <p><isprint value="${Resource.msg('dbload.page.description', 'dbload_configuration', null)}" /></p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <table cellspacing="0" cellpadding="0" border="0" width="100%" class="w e s">
+            <tr>
+                <td colspan="2">
+                    <table border="0" cellpadding="4" cellspacing="0" width="100%" class="infobox_locale s w e">
+                        <tr>
+                            <td class="infobox_item bold" nowrap="nowrap">
+                                <isprint value="${Resource.msg('orderconf.form.mapped.fields.text', 'emails_orderconfirmation', null)}" />
+                                    &middot;
+                                <a href="#" id="addField"><isprint value="${Resource.msg('orderconf.form.addFields', 'emails_orderconfirmation', null)}" /></a>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+
+            <iscomment>Populate the form if we already have stored settings</iscomment>
+
+            <isif condition="${!empty(pdict.StoredConfiguration) && !empty(pdict.StoredConfiguration.mappedFields)}">
+                <tr>
+                    <td class="table_detail" nowrap="nowrap" id="left">
+                    <p>
+                        <br/><b><isprint value="${Resource.msg('dbload.emarsys.field', 'dbload_configuration', null)}" /></b>
+                    </p>
+                    <isscript>
+                        var fid = 0;
+                    </isscript>
+                    <isloop items="${pdict.StoredConfiguration.mappedFields}" var="form">
+                    <isscript>
+                        fid++;
+                    </isscript>
+                        <div id="l" class="dynamic-field" data-id="${fid.toString()}">
+                           <select name="${pdict.CurrentForms.dbload_config.mappedField.htmlName}" id="${pdict.CurrentForms.dbload_config.mappedField.htmlName}">
+                                <option><isprint value="${Resource.msg('dbload.emarsys.field', 'dbload_configuration', null)}" /></option>
+                            <isif condition="${!empty(pdict.AvailableFields)}">
+                                <isloop items="${pdict.AvailableFields}" var="element">
+                                        <option value="${element.id}" <isif condition="${form.field == element.id}">selected="selected"</isif>><isprint value="${element.name}" /></option>
+                                </isloop>
+                            </isif>
+                           </select>
+                           <span class="star">*</span>
+                           <input type="checkbox" value="${(fid - 1).toString()}" name="${pdict.CurrentForms.dbload_config.removeField.htmlName}" id="${pdict.CurrentForms.dbload_config.removeField.htmlName}" />
+                           <isprint value="${Resource.msg('orderconf.form.remove.checkbox', 'emails_orderconfirmation', null)}" />
+                           <p class="red error"></p>
+                        </div>
+                    </isloop>
+                    </td>
+                    <td class="table_detail" width="100%" id="right">
+                    <p>
+                        <br/><b><isprint value="${Resource.msg('dbload.available.attribute', 'dbload_configuration', null)}" /></b>
+                    </p>
+                    <isscript>
+                        var fid = 0;
+                    </isscript>
+                    <isloop items="${pdict.StoredConfiguration.mappedFields}" var="form">
+                    <isscript>
+                        fid++;
+                    </isscript>
+                        <div id="r" class="dynamic-field attribute" data-id="${fid.toString()}">
+                           <select name="${pdict.CurrentForms.dbload_config.placeholder.htmlName}" id="${pdict.CurrentForms.dbload_config.placeholder.htmlName}">
+                                <option><isprint value="${Resource.msg('dbload.available.attribute', 'dbload_configuration', null)}" /></option>
+                            <isif condition="${!empty(pdict.AvailableAttributes)}">
+                                <isloop items="${pdict.AvailableAttributes}" var="element">
+                                    <option value="${element.value}" <isif condition="${form.placeholder == element.value}">selected="selected"</isif>><isprint value="${element.name}" /></option>
+                                </isloop>
+                            </isif>
+                           </select>
+                            <p class="red error"></p>
+                        </div>
+                    </isloop>
+                    </td>
+                </tr>
+            <iselse>
+            <tr>
+                <td class="table_detail" nowrap="nowrap" id="left">
+                    <p>
+                        <br/><b><isprint value="${Resource.msg('dbload.emarsys.field', 'dbload_configuration', null)}" /></b>
+                    </p>
+                    <div id="l" class="dynamic-field" data-id="1">
+                    <span>
+                       <select name="${pdict.CurrentForms.dbload_config.mappedField.htmlName}" id="${pdict.CurrentForms.dbload_config.mappedField.htmlName}">
+                            <option><isprint value="${Resource.msg('dbload.emarsys.field', 'dbload_configuration', null)}" /></option>
+                            <isif condition="${!empty(pdict.AvailableFields)}">
+                                <isloop items="${pdict.AvailableFields}" var="element">
+                                        <option value="${element.id}"><isprint value="${element.name}" /></option>
+                                </isloop>
+                            </isif>
+                       </select>
+                    </span>
+                    <span class="star">*</span>
+                    <p class="red error"></p>
+                    </div>
+                </td>
+                <td class="table_detail" width="100%" id="right">
+                    <p>
+                        <br/><b><isprint value="${Resource.msg('dbload.available.attribute', 'dbload_configuration', null)}" /></b>
+                    </p>
+                    <div id="r" class="dynamic-field attribute" data-id="1">
+                       <select name="${pdict.CurrentForms.dbload_config.placeholder.htmlName}" id="${pdict.CurrentForms.dbload_config.placeholder.htmlName}">
+                            <option><isprint value="${Resource.msg('dbload.available.attribute', 'dbload_configuration', null)}" /></option>
+                            <isif condition="${!empty(pdict.AvailableAttributes)}">
+                                <isloop items="${pdict.AvailableAttributes}" var="element">
+                                    <option value="${element.value}"><isprint value="${element.name}" /></option>
+                                </isloop>
+                            </isif>
+                       </select>
+                    <p class="red error"></p>
+                    </div>
+                </td>
+            </tr>
+            </isif>
+            </table>
+            <table class="w e s" width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                    <td align="right">
+                        <table border="0" cellspacing="4" cellpadding="0">
+                            <tr>
+                                <td class="button"><button type="submit" name="${pdict.CurrentForms.dbload_config.dbload_update.htmlName}" id="${pdict.CurrentForms.dbload_config.dbload_update.htmlName}" class="button"><isprint value="${Resource.msg('orderconf.form.apply', 'emails_orderconfirmation', null)}" /></button></td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</form>
+</isif>
+
+<isscript>
+try {
+    var form_args = {
+                        mappedField_parent : "#left",
+                        mappedField_name : pdict.CurrentForms.dbload_config.mappedField.htmlName,
+                        mappedField_placeholder : Resource.msg('dbload.emarsys.field', 'dbload_configuration', null),
+                        placeholder_parent : "#right",
+                        placeholder_name : pdict.CurrentForms.dbload_config.placeholder.htmlName,
+                        placeholder_placeholder : Resource.msg('dbload.available.attribute', 'dbload_configuration', null),
+                        externalEvents_placeholder : Resource.msg('orderconf.form.external.events.text', 'emails_orderconfirmation', null),
+                        removeFields_placeholder : Resource.msg('orderconf.form.removeFields.text', 'emails_orderconfirmation', null),
+                        elementsCount : pdict.AvailableElementsCount,
+                        thirdParam : "ignore",
+                        thirdParamValues : JSON.parse(pdict.AvailableAttributesJSON),
+                    },
+       selectOpt = pdict.AvailableElementsJSON,
+       totalStoredFields = ( !empty(pdict.StoredConfiguration) && !empty(pdict.StoredConfiguration.mappedFields) ) ? pdict.StoredConfiguration.mappedFields.length : 0;
+    } catch(err) {
+        var y = err;
+    }
+</isscript>
+<isprint value="${y}" encoding="off"/>
+<script type="text/javascript"><isinclude template="resources/emarsys_resources"/></script>
+<script>
+    var fieldsInfo = <isprint value="${JSON.stringify(form_args)}" encoding="off"/>;
+    var options = <isprint value="${selectOpt}" encoding="off"/>;
+    var totalFields = <isprint value="${totalStoredFields}" encoding="off"/>;
+</script>
+<script src="${URLUtils.staticURL('../js/main.js')}"></script>
+<script>
+    Emarsys.add(fieldsInfo, options);
+    Emarsys.validate("form#configDBLoad", fieldsInfo);
+</script>
+</isdecorate>

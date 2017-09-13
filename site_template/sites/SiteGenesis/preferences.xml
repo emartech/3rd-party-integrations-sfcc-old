@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<preferences xmlns="http://www.demandware.com/xml/impex/preferences/2007-03-31">
+    <custom-preferences>
+        <all-instances/>
+        <development>
+            <preference preference-id="emarsysEnvironment">suite11.emarsys.net</preference>
+            <preference preference-id="emarsysAPIUsername">platint_osf_v2001</preference>
+            <preference preference-id="emarsysAPIPassword">2rfJ6vrqVSPk1StaBbKU</preference>
+            <preference preference-id="emarsysCountryCodes">{"us": 185,"uk": 184,"de": 65,"fr": 61}</preference>
+            <preference preference-id="emarsysGenderCodes">{"male": 1,"female": 2}</preference>
+            <preference preference-id="emarsysOrderConfirmationElements">[&#13;
+        {&#13;
+			"value" : "billingAddress.address1",&#13;
+			"name"  : "Billing: Address 1"&#13;
+		},&#13;
+        {&#13;
+			"value" : "billingAddress.address2",&#13;
+			"name"  : "Billing: Address 2"&#13;
+		},&#13;
+        {&#13;
+			"value" : "billingAddress.postalCode",&#13;
+			"name"  : "Billing: Postal Code"&#13;
+		},&#13;
+        {&#13;
+			"value" : "billingAddress.city",&#13;
+			"name"  : "Billing: City"&#13;
+		},&#13;
+        {&#13;
+			"value" : "billingAddress.countryCode.displayValue",&#13;
+			"name"  : "Billing: Country"&#13;
+		},&#13;
+        {&#13;
+			"value" : "billingAddress.phone",&#13;
+			"name"  : "Billing: Phone"&#13;
+		},&#13;
+        {&#13;
+			"value" : "shippingAddress.address1",&#13;
+			"name"  : "Shipping: Address 1"&#13;
+		},&#13;
+        {&#13;
+			"value" : "shippingAddress.address2",&#13;
+			"name"  : "Shipping: Address 2"&#13;
+		},&#13;
+        {&#13;
+			"value" : "shippingAddress.postalCode",&#13;
+			"name"  : "Shipping: Postal Code"&#13;
+		},&#13;
+        {&#13;
+			"value" : "shippingAddress.city",&#13;
+			"name"  : "Shipping: City"&#13;
+		},&#13;
+        {&#13;
+			"value" : "shippingAddress.countryCode.displayValue",&#13;
+			"name"  : "Shipping: Country"&#13;
+		},&#13;
+        {&#13;
+			"value" : "shippingAddress.phone",&#13;
+			"name"  : "Shipping: Phone"&#13;
+		},&#13;
+        {&#13;
+			"value" : "order.customerEmail",&#13;
+			"name"  : "Customer email"&#13;
+		},&#13;
+        {&#13;
+			"value" : "order.orderNo",&#13;
+			"name"  : "Order number"&#13;
+		},&#13;
+        {&#13;
+			"value" : "order.creationDate",&#13;
+			"name"  : "Order date"&#13;
+		},&#13;
+        {&#13;
+			"value" : "deliveryMethod.display",&#13;
+			"name"  : "Delivery method"&#13;
+		},&#13;
+        {&#13;
+			"value" : "paymentMethod.display",&#13;
+			"name"  : "Payment method"&#13;
+		},&#13;
+        {&#13;
+			"value" : "shippingCosts.display",&#13;
+			"name"  : "Shipping costs"&#13;
+		},&#13;
+        {&#13;
+			"value" : "order.totalNetPrice",&#13;
+			"name"  : "Order: Total NET price"&#13;
+		},&#13;
+        {&#13;
+			"value" : "order.totalGrossPrice",&#13;
+			"name"  : "Order: Total GROSS price"&#13;
+		},&#13;
+        {&#13;
+			"value" : "order.totalTax",&#13;
+			"name"  : "Order taxes"&#13;
+		},&#13;
+        {&#13;
+			"value" : "orderRebate.display",&#13;
+			"name"  : "Order rebate"&#13;
+		},&#13;
+        {&#13;
+			"value" : "product.productName",&#13;
+			"name"  : "Products: Product name"&#13;
+		},&#13;
+        {&#13;
+			"value" : "product.quantityValue",&#13;
+			"name"  : "Products: Product quantity"&#13;
+		},&#13;
+        {&#13;
+			"value" : "product.url",&#13;
+			"name"  : "Products: Product URL"&#13;
+		},&#13;
+        {&#13;
+			"value" : "product.image",&#13;
+			"name"  : "Products: Product image"&#13;
+		},&#13;
+        {&#13;
+			"value" : "productItemTax.display",&#13;
+			"name"  : "Products: Product tax"&#13;
+		},&#13;
+        {&#13;
+			"value" : "product.price.currencyCode",&#13;
+			"name"  : "Products: Product price currency"&#13;
+		},&#13;
+        {&#13;
+			"value" : "productItemPrice.display",&#13;
+			"name"  : "Products: Product price"&#13;
+		},&#13;
+        {&#13;
+			"value" : "product.rebate",&#13;
+			"name"  : "Products: Product rebate"&#13;
+		},&#13;
+        {&#13;
+			"value" : "productItemGrossPrice.display",&#13;
+			"name"  : "Products: Product gross price"&#13;
+		}&#13;
+]</preference>
+<preference preference-id="emarsysShippingInformationElements">[&#13;
+        {&#13;
+			"value" : "billingAddress.address1",&#13;
+			"name"  : "Billing: Address 1"&#13;
+		},&#13;
+        {&#13;
+			"value" : "billingAddress.address2",&#13;
+			"name"  : "Billing: Address 2"&#13;
+		},&#13;
+        {&#13;
+			"value" : "billingAddress.postalCode",&#13;
+			"name"  : "Billing: Postal Code"&#13;
+		},&#13;
+        {&#13;
+			"value" : "billingAddress.city",&#13;
+			"name"  : "Billing: City"&#13;
+		},&#13;
+        {&#13;
+			"value" : "billingAddress.countryCode.displayValue",&#13;
+			"name"  : "Billing: Country"&#13;
+		},&#13;
+        {&#13;
+			"value" : "billingAddress.phone",&#13;
+			"name"  : "Billing: Phone"&#13;
+		},&#13;
+        {&#13;
+			"value" : "shippingAddress.address1",&#13;
+			"name"  : "Shipping: Address 1"&#13;
+		},&#13;
+        {&#13;
+			"value" : "shippingAddress.address2",&#13;
+			"name"  : "Shipping: Address 2"&#13;
+		},&#13;
+        {&#13;
+			"value" : "shippingAddress.postalCode",&#13;
+			"name"  : "Shipping: Postal Code"&#13;
+		},&#13;
+        {&#13;
+			"value" : "shippingAddress.city",&#13;
+			"name"  : "Shipping: City"&#13;
+		},&#13;
+        {&#13;
+			"value" : "shippingAddress.countryCode.displayValue",&#13;
+			"name"  : "Shipping: Country"&#13;
+		},&#13;
+        {&#13;
+			"value" : "shippingAddress.phone",&#13;
+			"name"  : "Shipping: Phone"&#13;
+		},&#13;
+        {&#13;
+			"value" : "order.customerEmail",&#13;
+			"name"  : "Customer email"&#13;
+		},&#13;
+        {&#13;
+			"value" : "order.orderNo",&#13;
+			"name"  : "Order number"&#13;
+		},&#13;
+        {&#13;
+			"value" : "order.creationDate",&#13;
+			"name"  : "Order date"&#13;
+		},&#13;
+        {&#13;
+			"value" : "deliveryMethod.display",&#13;
+			"name"  : "Delivery method"&#13;
+		},&#13;
+        {&#13;
+			"value" : "paymentMethod.display",&#13;
+			"name"  : "Payment method"&#13;
+		},&#13;
+        {&#13;
+			"value" : "shippingCosts.display",&#13;
+			"name"  : "Shipping costs"&#13;
+		},&#13;
+        {&#13;
+			"value" : "order.totalNetPrice",&#13;
+			"name"  : "Order: Total NET price"&#13;
+		},&#13;
+        {&#13;
+			"value" : "order.totalGrossPrice",&#13;
+			"name"  : "Order: Total GROSS price"&#13;
+		},&#13;
+        {&#13;
+			"value" : "order.totalTax",&#13;
+			"name"  : "Order taxes"&#13;
+		},&#13;
+        {&#13;
+			"value" : "orderRebate.display",&#13;
+			"name"  : "Order rebate"&#13;
+		},&#13;
+        {&#13;
+			"value" : "product.productName",&#13;
+			"name"  : "Products: Product name"&#13;
+		},&#13;
+        {&#13;
+			"value" : "product.quantityValue",&#13;
+			"name"  : "Products: Product quantity"&#13;
+		},&#13;
+        {&#13;
+			"value" : "product.url",&#13;
+			"name"  : "Products: Product URL"&#13;
+		},&#13;
+        {&#13;
+			"value" : "product.image",&#13;
+			"name"  : "Products: Product image"&#13;
+		},&#13;
+        {&#13;
+			"value" : "product.tax",&#13;
+			"name"  : "Products: Product tax"&#13;
+		},&#13;
+        {&#13;
+			"value" : "product.price.currencyCode",&#13;
+			"name"  : "Products: Product price currency"&#13;
+		},&#13;
+        {&#13;
+			"value" : "product.adjustedPrice",&#13;
+			"name"  : "Products: Product price"&#13;
+		},&#13;
+        {&#13;
+			"value" : "product.rebate",&#13;
+			"name"  : "Products: Product rebate"&#13;
+		},&#13;
+        {&#13;
+			"value" : "product.adjustedGrossPrice",&#13;
+			"name"  : "Products: Product gross price"&#13;
+		},&#13;
+        {&#13;
+			"value" : "trackingNumber",&#13;
+			"name"  : "Tracking number"&#13;
+		},&#13;
+        {&#13;
+			"value" : "custom.shippingCompany",&#13;
+			"name"  : "Custom: Shipping company"&#13;
+		},&#13;
+        {&#13;
+			"value" : "custom.arrivalDate",&#13;
+			"name"  : "Custom: Arrival date"&#13;
+		},&#13;
+        {&#13;
+			"value" : "custom.trackingLink",&#13;
+			"name"  : "Custom: Tracking URL"&#13;
+		}&#13;
+]</preference>
+            <preference preference-id="emarsysSourceName">osf-test-source2</preference>
+            <preference preference-id="emarsysContactFieldsMap">{&#13;
+				"1": "firstName",&#13;
+				"2": "lastName",&#13;
+				"3": "emailAddress",&#13;
+				"4": "birthday",&#13;
+				"5": "gender",&#13;
+				"10": "address1",&#13;
+				"11": "city",&#13;
+				"12": "stateCode",&#13;
+				"13": "postalCode",&#13;
+				"14": "countryCode",&#13;
+				"15": "phone",&#13;
+				"17": "jobTitle",&#13;
+				"18": "companyName",&#13;
+				"46": "salutation"&#13;
+			}</preference>
+            <preference preference-id="emarsysDBLoadAttributes">[&#13;
+	{&#13;
+		"value" : "firstName",&#13;
+		"name"  : "First Name"&#13;
+	},&#13;
+	{&#13;
+		"value" : "lastName",&#13;
+		"name"  : "Last Name"&#13;
+	},&#13;
+	{&#13;
+		"value" : "email",&#13;
+		"name"  : "E-mail"&#13;
+	},&#13;
+	{&#13;
+		"value" : "address1",&#13;
+		"name"  : "Address"&#13;
+	},&#13;
+	{&#13;
+		"value" : "postalCode",&#13;
+		"name"  : "ZIP Code"&#13;
+	},&#13;
+	{&#13;
+		"value" : "city",&#13;
+		"name"  : "City"&#13;
+	},&#13;
+	{&#13;
+		"value" : "stateCode",&#13;
+		"name"  : "State"&#13;
+	},&#13;
+	{&#13;
+		"value" : "countryCode",&#13;
+		"name"  : "Country"&#13;
+	},&#13;
+	{&#13;
+		"value" : "phone",&#13;
+		"name"  : "Phone"&#13;
+	},&#13;
+	{&#13;
+		"value" : "phoneMobile",&#13;
+		"name"  : "Mobile"&#13;
+	},&#13;
+	{&#13;
+		"value" : "fax",&#13;
+		"name"  : "Fax"&#13;
+	},&#13;
+	{&#13;
+		"value" : "gender",&#13;
+		"name"  : "Gender"&#13;
+	},&#13;
+	{&#13;
+		"value" : "birthday",&#13;
+		"name"  : "Date of Birth"&#13;
+	},&#13;
+	{&#13;
+		"value" : "companyName",&#13;
+		"name"  : "Company"&#13;
+	}	&#13;
+]</preference>
+			<preference preference-id="emarsysSmartInsightAvailableElements">
+				<value>order</value>
+				<value>item</value>
+				<value>quantity</value>
+				<value>date</value>
+				<value>c_sales_amount</value>
+				<value>custom.lineItem.shipment.shippingAddress.address1</value>
+				<value>custom.lineItem.shipment.shippingAddress.countryCode</value>
+				<value>custom.lineItem.shipment.trackingNumber</value>
+				<value>custom.order.billingAddress.address1</value>
+				<value>custom.order.billingAddress.countryCode</value>
+				<value>custom.order.paymentMethods</value>
+				<value>custom.product.url</value>
+				<value>custom.product.image</value>
+				<value>custom.product.rebate</value>
+				<value>custom.product.name</value>
+			</preference>
+			<preference preference-id="emarsysPredictProductAttributes">
+                <value>product.ID</value>
+                <value>product.availability</value>
+                <value>product.name</value>
+                <value>product.url</value>
+                <value>product.image</value>
+                <value>product.categories</value>
+                <value>product.price</value>
+            </preference>
+			<preference preference-id="emarsysPredictVariationAttributes">
+                <value>product.custom.color</value>
+                <value>product.custom.size</value>
+            </preference>
+        </development>
+        <staging/>
+        <production/>
+    </custom-preferences>
+</preferences>

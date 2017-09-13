@@ -1,0 +1,48 @@
+/**
+* Demandware Script File
+* To get saved data from CO
+*
+*
+*   @output Success : Boolean
+*   @output Errors : Object
+*   @output StoredConfiguration : Object
+*
+*/
+
+var customObjectMgr = require('dw/object/CustomObjectMgr'),
+	logger = require("dw/system/Logger"),
+	web = require("dw/web");
+
+function execute( args : PipelineDictionary ) : Number
+{
+
+	try {
+		var co = null,
+			savedConfiguration : Object = new Object(),	// object to store data from the instance
+	    	mappedFields : Array = new Array();
+		
+		// get custom object instance
+	    co = customObjectMgr.getCustomObject('EmarsysSmartInsightConfiguration', 'emarsysSmartInsight');
+	    
+	    if (co) {
+	    	mappedFields = JSON.parse(co.custom.mappedFields);
+	    	
+	    	// if CO has stored in it mapped fields create a pair in the savedConfiguration object
+	    	if (mappedFields && mappedFields.length > 0) {
+	    		savedConfiguration.mappedFields = mappedFields;
+	    	}
+	    } else {
+	    	co = customObjectMgr.createCustomObject('EmarsysSmartInsightConfiguration', 'emarsysSmartInsight');
+	    }
+	    args.StoredConfiguration = savedConfiguration;
+	} catch (err) {
+		logger.error("[GetSmartInsightConfig.ds #" + err.lineNumber + "] - ***Emarsys get SmartInsight config data error message: " + err);
+		
+    	args.Success = false;
+    	args.Errors = {"name": web.Resource.msg("get.config.error", "emails_configuration", null), "body": web.Resource.msg("contact.administrator", "emails_configuration", null)};
+		
+		return PIPELET_ERROR;
+	}
+
+    return PIPELET_NEXT;
+}

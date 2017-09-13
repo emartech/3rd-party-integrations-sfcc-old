@@ -1,0 +1,143 @@
+/**
+* The script for managing database load configuration
+*   @input  Data : Object;
+*   @input  BatchElements : Object;
+*   @input  BatchPlaceholders : Object;
+*   @input  BatchRemove : Object;
+*   @output AvailableAttributes : Object
+*   @output AvailableFields : Object
+*   @output AvailableElements : Object
+*   @output AvailableElementsJSON : String
+*   @output AvailableAttributesJSON : String
+*   @output AvailableElementsCount : Number
+*   @output StoredConfiguration : Object
+*   @output Errors : Object
+*   @output Success : Boolean
+*   @output CustomError : String;
+*/
+var system = require('dw/system'),
+    util   = require('dw/util'),
+    web    = require('dw/web'),
+    obj    = require('dw/object');
+
+function execute( args : PipelineDictionary ) : Number {
+
+    var UniqueObjectKey : String = "profileFields",
+        ProfileFieldsObject : obj.CustomObject = obj.CustomObjectMgr.getCustomObject("EmarsysProfileFields", UniqueObjectKey),
+        configurationType : String = "dbloadConfig",
+        DBLoadConfigObject : obj.CustomObject = obj.CustomObjectMgr.getCustomObject("EmarsysDBLoadConfig", configurationType),
+        DBLoadAttributes : Array = system.Site.getCurrent().getCustomPreferenceValue("emarsysDBLoadAttributes"),
+        data : Object = args.Data,
+        selectData : Object = [],
+        selectAttributesData : Object = [],
+        fieldIds : Object = [],
+        fieldNames : Object = [],
+        pairedData = [],
+        duplicates = [],
+        mappedFields;
+
+    try {
+
+        //Check for stored preferences
+        if(!empty(ProfileFieldsObject)) {
+            var fields = JSON.parse(ProfileFieldsObject.custom.result);
+            var options = [];
+            for(var i = 0; i<fields.length; i++) {
+                options.push( { id : fields[i].id, name : fields[i].name } );
+            }
+            args.AvailableFields = options;
+        } else {
+            args.Errors = { name : web.Resource.msg("dbload.nofields.error.title", "dbload_configuration", null), body : web.Resource.msg("dbload.nofields.error.body", "dbload_configuration", null) };
+        }
+
+        //Check for defined fields
+        if(!empty(args.AvailableFields)) {
+            for(var i = 0; i<args.AvailableFields.length; i++) {
+                selectData.push(args.AvailableFields[i]);
+            }
+            args.AvailableElementsJSON = JSON.stringify({ selectOptions : selectData });
+            args.AvailableElementsCount = args.AvailableFields.length;
+        }
+
+        //Check for defined attributes
+        if(!empty(DBLoadAttributes)) {
+            args.AvailableAttributes = JSON.parse(DBLoadAttributes);
+            for(var i = 0; i<args.AvailableAttributes.length; i++) {
+                selectAttributesData.push(args.AvailableAttributes[i]);
+            }
+            args.AvailableAttributesJSON = JSON.stringify({ selectOptions : selectAttributesData });
+        } else {
+            args.Errors = { name : web.Resource.msg("dbload.noattributes.error.title", "dbload_configuration", null), body : web.Resource.msg("dbload.noattributes.error.body", "dbload_configuration", null) };
+        }
+
+        if(!empty(DBLoadConfigObject)) {
+            args.StoredConfiguration = { mappedFields : JSON.parse(DBLoadConfigObject.custom.mappedFields) };
+        } else {
+            //If no settings are present, try to load defaults
+            if(!empty(mappedFields)) {
+                var CF : obj.CustomObject = obj.CustomObjectMgr.createCustomObject("EmarsysDBLoadConfig", configurationType);
+                CF.custom.mappedFields = mappedFields;
+                args.StoredConfiguration = { mappedFields : JSON.parse(CF.custom.mappedFields) };
+            }
+        }
+
+        //Has the form been submitted?
+        if(!empty(data)) {
+            //For multiple field values
+            if(!empty(args.BatchElements) && !empty(args.BatchPlaceholders)) {
+                var totalElements = args.BatchElements.length;
+                var totalRemovedElements = !empty(args.BatchRemove) ? args.BatchRemove.length : 0;
+
+                //Store
+                for(var i = 0; i<totalElements; i++) {
+                    var add = true;
+                        if (!empty(args.BatchRemove)) {
+                            for each (var field in args.BatchRemove) {
+                                if (field == i) {
+                                    add = false;
+                                    break;
+                                }
+                            }
+                        }
+
+                    if(add) {
+                        pairedData.push({ field : args.BatchElements[i], placeholder : args.BatchPlaceholders[i].trim() });
+                    }
+                }
+
+                mappedFields = JSON.stringify(pairedData);
+            } else {
+                if(!empty(data.mappedField.value) && !empty(data.placeholder.value)) {
+                    mappedFields = JSON.stringify( [{ field : data.mappedField.value, placeholder : data.placeholder.value.trim() }] );
+                }
+            }
+
+            if(!empty(mappedFields)) {
+                if(totalElements > args.AvailableFields.length) {
+                    args.Success = false;
+                    args.CustomError = web.Resource.msg("orderconf.oversized_count.error", "emails_orderconfirmation", null);
+                } else {
+                    //Update configuration
+                    if(!empty(DBLoadConfigObject)) {
+                        obj.CustomObjectMgr.remove(DBLoadConfigObject);
+                    }
+                    var Update : obj.CustomObject = obj.CustomObjectMgr.createCustomObject("EmarsysDBLoadConfig", configurationType);
+                    Update.custom.mappedFields = mappedFields;
+
+                    //Output updates
+                    args.StoredConfiguration = { mappedFields : JSON.parse(Update.custom.mappedFields) };
+                    args.Success = true;
+                }
+            } else {
+                args.Success = false;
+                args.CustomError = web.Resource.msg("orderconf.missing_field_values.error", "emails_orderconfirmation", null);
+            }
+        }
+
+    } catch (err) {
+          system.Logger.error("[InitialDBLoadConfig.ds #" + err.lineNumber + "] - ***Emarsys database load configuration error message: " + err);
+          return PIPELET_ERROR;
+    }
+
+    return PIPELET_NEXT;
+}

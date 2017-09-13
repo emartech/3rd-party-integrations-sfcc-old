@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<custom-objects xmlns="http://www.demandware.com/xml/impex/customobject/2006-10-31">
+    <custom-object type-id="EmarsysNewsletterSubscription" object-id="account">
+        <object-attribute attribute-id="optInExternalEvent">5636</object-attribute>
+        <object-attribute attribute-id="optInExternalEventAfterConfirmation">5634</object-attribute>
+        <object-attribute attribute-id="optInStrategy">1</object-attribute>
+    </custom-object>
+
+    <custom-object type-id="EmarsysNewsletterSubscription" object-id="checkout">
+        <object-attribute attribute-id="optInExternalEvent">5638</object-attribute>
+        <object-attribute attribute-id="optInExternalEventAfterConfirmation">5634</object-attribute>
+        <object-attribute attribute-id="optInStrategy">1</object-attribute>
+    </custom-object>
+
+    <custom-object type-id="EmarsysNewsletterSubscription" object-id="footer">
+        <object-attribute attribute-id="optInExternalEvent">5633</object-attribute>
+        <object-attribute attribute-id="optInExternalEventAfterConfirmation">5634</object-attribute>
+        <object-attribute attribute-id="optInStrategy">1</object-attribute>
+    </custom-object>
+
+</custom-objects>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<custom-objects xmlns="http://www.demandware.com/xml/impex/customobject/2006-10-31">
+    <custom-object type-id="EmarsysExternalEvents" object-id="StoredEvents">
+        <object-attribute attribute-id="id">StoredEvents</object-attribute>
+        <object-attribute attribute-id="name">StoredEvents</object-attribute>
+        <object-attribute attribute-id="result">[{"id":"5633","name":"single"},{"id":"5634","name":"double"},{"id":"5636","name":"single account"},{"id":"5637","name":"double account"},{"id":"5638","name":"single checkout"},{"id":"5639","name":"double checkout"}]</object-attribute>
+    </custom-object>
+
+</custom-objects>

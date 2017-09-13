@@ -1,0 +1,97 @@
+/**
+* Demandware Script File
+* Sends contact data and define if external event should be triggered or not
+*
+*
+*   @input Email : String
+*   @input Map : Object
+*   @input SubscribeToEmails : Boolean
+*   @output TriggerEvent : Boolean
+*
+*/
+var logger = require("dw/system/Logger");
+
+function execute( args : PipelineDictionary ) : Number
+{
+
+    var emarsysHelper : Object = new (require("./../util/EmarsysHelper"))(),
+		contactData,
+		sendData,
+		request : Object = new Object();
+	
+	var fields : Array = new Array();	
+	
+	var map = args.Map;
+	
+	try {
+		
+		// request body to check if contact already exists
+		request = {
+			"keyId": "3",
+			"keyValues": [args.Email]
+		}
+		
+	    // send request to check if contact already exists
+		contactData = emarsysHelper.triggerAPICall("emarsys.api", "contact/getdata", request, "POST");
+		
+		// parse response
+	    var dataObj = JSON.parse(contactData.object),
+	    	errors = dataObj.data.errors;
+	    
+	    var method = "PUT";
+	    var results = null;
+	    // check for errors
+	    if (errors.length > 0) {
+	    	var error = errors[0];
+	    	// account does not exist
+	    	if (error.errorCode == "2008") {
+	    		method = "POST";
+	    	} else {
+	    		logger.error("Get data error:" + contactData.error + "] - ***Emarsys error message: " + contactData.errorMessage);
+				return PIPELET_ERROR;
+	    	}
+	    } else {
+	    	var	dataResults = dataObj.data.result,
+	    		results = dataResults[0];
+	    }
+		
+		// the value depends on field 31 value in response
+	    var optIn = results ? results['31'] : null;
+		
+		// event will be triggered if optIn status set to false or doesn't set at all
+		args.TriggerEvent = optIn != 1;
+		if (optIn == null) {
+			if (!map) map = {};
+			if (args.SubscribeToEmails) {
+				map["31"] = 2;
+			}
+		}
+
+		if (map) {
+			// this is a new request body that will be sent in case if account doen't exists or it's status for optin is false (null)
+		    var requestNew : Object = {
+				"keyId": "3",
+				"3": args.Email,
+			};
+		
+			// if source id value exists add it to request
+			emarsysHelper.addSourceIdToRequest(requestNew);
+			
+			// if subscription is called from checkout or signup page addFields function will add fields to request
+			emarsysHelper.addFields(map, requestNew);
+			
+			sendData = emarsysHelper.triggerAPICall("emarsys.api", "contact", requestNew, method);
+			
+			if (sendData.status !== "OK") {
+				logger.error("Update data error:" + sendData.error + "] - ***Emarsys error message: " + sendData.errorMessage);
+				return PIPELET_ERROR;
+			}
+		}
+	} catch (err) {
+		// log error message in case something goes wrong
+		logger.error("[SendData.ds #" + err.lineNumber + "] - ***Emarsys send contact data error message: " + err);
+		return PIPELET_ERROR;
+	}
+
+    return PIPELET_NEXT;
+}

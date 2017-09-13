@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<form xmlns="http://www.demandware.com/xml/form/2008-04-19">
+    <field formid="footerSubscriptionStrategy" type="string" missing-error="config.footer.strategy.error" mandatory="true" />
+    <field formid="footerExternalEventOptin" type="string" missing-error="config.footer.optin.error" mandatory="false"/>
+    <field formid="footerExternalEventOptinAfterConfirmation" type="string" missing-error="config.footer.confirmation.error" mandatory="false"/>
+    <field formid="tab" type="string"  mandatory="false" />
+    <action formid="config_footer" valid-form="true" />
+</form>

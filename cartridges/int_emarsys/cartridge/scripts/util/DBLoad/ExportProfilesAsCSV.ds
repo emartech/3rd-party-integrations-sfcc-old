@@ -1,0 +1,257 @@
+/**
+*	Export Profile atributes as CSV
+*
+*	@input Profiles : dw.util.Iterator
+*	@input FileName : String
+*	@input Separator : String
+*	@input OptInStatus : Number
+*	@input OptInStatusAttribute : String
+*	@input FolderName : String
+*	@input CountryValueCodes : String
+*	@input GenderValueCodes : String
+*	@input FieldValueMapping : String
+*	@output ErrorMsg : String An Error message
+*	@output ExportStatus : Boolean
+*
+*/
+
+var system   = require("dw/system"),
+	util     = require("dw/util"),
+	customer = require("dw/customer"),
+	object   = require("dw/object"),
+	io       = require("dw/io"),
+	logger   = require("dw/system/Logger");
+
+function execute( args : PipelineDictionary ) : Number
+{
+	var Separator : String            = args.Separator,
+		FileName : String             = createFileName(),
+		FolderName : String           = args.FolderName;
+
+	system.Site.current.setCustomPreferenceValue('emarsysFileNameString', FileName);
+
+	var folderPath : String                           = dw.io.File.IMPEX + '/src/'+FolderName,
+		filePath : String                             = folderPath + '/'+ FileName +'.csv',
+		folder : dw.io.File                           = new io.File(folderPath);
+
+
+	try {
+		var FieldConfigurationCO : dw.object.CustomObject = new object.CustomObjectMgr.getCustomObject("EmarsysDBLoadConfig","dbloadConfig"),
+			FieldConfiguration                            = JSON.parse(FieldConfigurationCO.custom.mappedFields),
+			ProfileFieldsCO : dw.object.CustomObject      = new object.CustomObjectMgr.getCustomObject("EmarsysProfileFields","profileFields"),
+			ProfileFields                                 = JSON.parse(ProfileFieldsCO.custom.result),
+			OptInStatus : Number                          = args.OptInStatus,
+			OptInStatusAttribute : String                 = args.OptInStatusAttribute,
+			CountryValueCodes : String                    = JSON.parse(args.CountryValueCodes),
+			GenderValueCodes : String                     = JSON.parse(args.GenderValueCodes),
+			Profiles                                      = args.Profiles,
+			FieldValueMapping                             = JSON.parse(args.FieldValueMapping);
+
+
+		if(!folder.exists()){
+			folder.mkdirs();
+		}
+
+		var	exportFile : dw.io.File                       = new io.File(filePath),
+			exportFileWriter : dw.io.FileWriter           = new io.FileWriter(exportFile),
+			exportCSVStreamWriter : dw.io.CSVStreamWriter = new io.CSVStreamWriter(exportFileWriter,Separator,'"');
+
+		var ProfileInfoHeader = makeCSVHeader(FieldConfiguration, ProfileFields);
+		if (ProfileInfoHeader.indexOf('Opt-In') == -1) {
+			ProfileInfoHeader.push('Opt-In');
+		}
+		exportCSVStreamWriter.writeNext(ProfileInfoHeader);
+
+		var ProfilesExportThreshold = system.Site.getCurrent().getCustomPreferenceValue("emarsysProfilesExportThreshold"),
+			ExportedProfiles = 0;
+
+		for each(var Profile : dw.customer.Profile in Profiles){
+			var ProfileInfo = [];
+
+			if(Profile.addressBook.preferredAddress != null){
+				var Address : dw.customer.CustomerAddress = Profile.addressBook.preferredAddress;
+			}else if (Profile.addressBook.addresses.length > 0){
+				var Address : dw.customer.CustomerAddress = Profile.addressBook.addresses[0];
+			}else{
+				var Address : Object = {};
+			}
+
+			for each(var Field : Object in FieldConfiguration){
+				if(Field['field'] != '31'){
+					ProfileInfo.push(getAttributeValue(Address, Profile, Field, CountryValueCodes, GenderValueCodes, FieldValueMapping));
+				}
+			}
+
+			switch (OptInStatus){
+				case 0 : // All users empty
+					ProfileInfo.push('');
+					break;
+				case 1 : // All users true
+					ProfileInfo.push(1);
+					break;
+				case 2 : // Depending on attribute
+					if(Profile.custom[OptInStatusAttribute] != null && Profile.custom[OptInStatusAttribute]){
+						ProfileInfo.push(1);
+					}else{
+						ProfileInfo.push(1);
+					}
+
+					break;
+				default :
+					ProfileInfo.push('');
+					break;
+			}
+			exportCSVStreamWriter.writeNext(ProfileInfo);
+
+			ExportedProfiles++;
+			Profile.custom.emarsysExportedProfileFlag = true;
+
+			if(ExportedProfiles == ProfilesExportThreshold) {
+				break;
+			}
+		}
+
+		if(ExportedProfiles < ProfilesExportThreshold) {
+			system.Site.getCurrent().setCustomPreferenceValue("emarsysDBLoadExportStatus", true);
+			args.ExportStatus = true;
+		}
+
+		return PIPELET_NEXT;
+	} catch (err){
+		args.ErrorMsg = err.toString();
+		logger.error("[ExportProfilesAsCSV.ds #" + err.lineNumber + "] - ***Emarsys CSV profile data export error message: " + err);
+		return PIPELET_ERROR;
+
+	} finally {
+		exportCSVStreamWriter.close();
+		exportFileWriter.close();
+	}
+	return PIPELET_NEXT;
+}
+
+function makeCSVHeader(FieldConfiguration, ProfileFields){
+	var header        = [],
+		configFields  = FieldConfiguration,
+		profileFields = ProfileFields;
+
+	for each(var configField in configFields){
+		var index = 0;
+		for each(var profileField in profileFields){
+			if(configField['field'] == profileField['id'] && profileField['name'] != 'Opt-In'){
+				header.push(profileField['name']);
+				profileFields.splice(index,1);
+				break;
+			}
+			index++;
+		}
+	}
+
+	return header;
+}
+
+function getAttributeValue(Address, Profile, Field, CountryValueCodes, GenderValueCodes, FieldValueMapping){
+	var emarsysHelper : Object = new (require("./../../util/EmarsysHelper"))();
+
+	var attributeName : String = Field['placeholder'],
+		attributeValue : String = '',
+		attributeId : String = Field['field'];
+	if(attributeName == 'gender'){
+		attributeValue = getGenderName(GenderValueCodes, Profile, FieldValueMapping, attributeId);
+	}else if(attributeName == 'countryCode'){
+		attributeValue = getCountryName(CountryValueCodes, Address, FieldValueMapping, attributeId);
+	}else if(attributeName.split('.')[0] == 'custom') {
+		assignedValue = emarsysHelper.getValues(attributeName, Profile, 0);
+		attributeValue = getSingleChoiceFieldValue(FieldValueMapping, Field, assignedValue);
+	}else{
+		if(attributeName in Address && !empty(Address[attributeName])){
+			if(attributeName == 'address1'){
+				var attributeValue = Address[attributeName] + (Address['address2'] != null ? ' ' + Address['address2'] : '');
+			}else{
+				var attributeValue = Address[attributeName];
+			}
+		}else if(attributeName in Profile && !empty(Profile[attributeName])){
+			if(attributeName == 'birthday'){
+				var birthday : String = Profile[attributeName].getFullYear().toFixed() + '-' +
+				(Profile[attributeName].getMonth()+1).toFixed() + '-' +
+				Profile[attributeName].getDate().toFixed();
+
+				var attributeValue = birthday;
+			}else{
+				var attributeValue = Profile[attributeName];
+			}
+		}
+	}
+	return attributeValue;
+}
+
+function getSingleChoiceFieldValue(FieldValueMapping, Field, assignedValue) {
+	var attributeValue = '';
+	if (assignedValue) {
+		var listOfValues = [];	// list of all possible values for specified field
+
+		for each(var key in Object.keys(FieldValueMapping)) {
+			if (key == Field.field) {
+				listOfValues = FieldValueMapping[key];
+			}
+		}
+
+		var hasOtherValue = false,	// flag to find if 'Other' value is present among all possible values
+			otherValue = '';
+		if (listOfValues.length > 0) {
+			for each(var value in listOfValues) {
+				if (assignedValue.toLowerCase() == value.choice.toLowerCase()) {
+					attributeValue = value.choice;
+					break;
+				} else if (value.choice.toLowerCase() == 'other') {
+					hasOtherValue = true;
+					otherValue = value.choice;
+				}
+			}
+		} else {
+			return assignedValue;
+		}
+
+		if (!attributeValue && hasOtherValue) {
+			attributeValue = otherValue;
+		}
+	}
+
+	return attributeValue;
+}
+
+function getCountryName(CountryValueCodes, Address, FieldValueMapping, attributeId){
+	if('countryCode' in Address && !empty(Address['countryCode'].displayValue) && Address['countryCode'].displayValue in CountryValueCodes){
+		var countryCode = CountryValueCodes[Address['countryCode'].displayValue];
+		var countryValue = '';
+		for each (var country in FieldValueMapping[attributeId]){
+			if(country['value'] == countryCode){
+				countryValue = country['choice'];
+				break;
+			}
+		}
+		return countryValue;
+	}
+	return '';
+}
+
+function getGenderName(GenderValueCodes, Profile, FieldValueMapping, attributeId){
+	if('gender' in Profile && !empty(Profile['gender'].displayValue) && Profile['gender'].displayValue.toLowerCase() in GenderValueCodes){
+		var genderCode = GenderValueCodes[Profile['gender'].displayValue.toLowerCase()];
+		var genderValue = '';
+		for each (var gender in FieldValueMapping[attributeId]){
+			if(gender['value'] == genderCode){
+				genderValue = gender['choice'];
+				break;
+			}
+		}
+		return genderValue;
+	}
+	return '';
+}
+
+function createFileName() {
+	var emarsysHelper : Object = new (require("./../../util/EmarsysHelper"))();
+	var currentDate = emarsysHelper.formatDate(new Date());
+
+	return 'initial_' + currentDate;
+}

@@ -1,0 +1,63 @@
+/**
+* The script for retrieving and storing Emarsys external events
+*   @input uid : String
+*   @input cid : String
+*   @input lid : String
+*   @input direct : String
+*   @input confirmation : Object
+*   @input passedParams : Object
+*   @output showConfirmation : Boolean
+*   @output params : Object
+*   @output errors : Boolean
+*   @output errorText : String
+*
+*/
+var system = require('dw/system'),
+    util   = require('dw/util'),
+    web    = require('dw/web'),
+    obj    = require('dw/object'),
+    svc    = require('dw/svc'),
+    net    = require('dw/net'),
+    io     = require('dw/io'),
+    crypto = require('dw/crypto');
+
+
+function execute( args : PipelineDictionary ) : Number {
+
+    var uid : String = !empty(args.passedParams) ? args.passedParams.uid : args.uid, //user id
+        cid : String = !empty(args.passedParams) ? args.passedParams.cid : args.cid, //campaign id
+        lid : String = !empty(args.passedParams) ? args.passedParams.lid : args.lid, //launch list id
+        direct : String = !empty(args.passedParams) ? args.passedParams.direct : args.direct, //y or n
+        confirmation : Object = !empty(args.passedParams) ? args.passedParams.confirmation : args.confirmation, //confirmation button
+        emarsysHelper : Object = new (require("./../util/EmarsysHelper"))();
+
+    try {
+
+        if(direct == "y" || (!empty(confirmation) && confirmation.triggeredAction.formId == "newsletter_unsubscribe")) {
+            args.showConfirmation = false;
+
+            //31 : 2 means optin : false
+            var unsubscribeContact = emarsysHelper.triggerAPICall("emarsys.api", "contact", { "31" : "2", key_id : "uid", uid : uid }, "PUT");
+            var unsubscribeContactFromCampaign = emarsysHelper.triggerAPICall("emarsys.api", "email/unsubscribe", { launch_list_id : lid, email_id : cid, contact_uid : uid }, "POST");
+
+            if(unsubscribeContact.status == "OK" && unsubscribeContactFromCampaign.status == "OK") {
+                args.errors = false; // successfully unsubscribed
+
+            } else {
+            	var errorMessage = unsubscribeContact.errorMessage ? unsubscribeContact.errorMessage : unsubscribeContactFromCampaign.errorMessage;
+            	var errorMsg = JSON.parse(errorMessage);
+            	args.errorText = errorMsg.replyText;
+                args.errors = true; // an error occurred; unsuccessful unsubscription
+            }
+        } else {
+            args.showConfirmation = true;
+            args.params = { uid : uid, cid : cid, lid : lid, direct : "y" };
+        }
+
+    } catch (err) {
+      system.Logger.error("[NewsletterUnsubscribe.ds #" + err.lineNumber + "] - ***Emarsys newsletter unsubscription error message: " + err);
+      return PIPELET_ERROR;
+    }
+
+    return PIPELET_NEXT;
+}

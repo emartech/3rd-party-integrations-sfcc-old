@@ -1,0 +1,67 @@
+/**
+* Demandware Script File
+* which handles call to Emarsys to submit caontact data
+*
+*   @input Email : String
+*   @input Method : String
+*   @input SubscriptionType : String
+*   @input SubscribeToEmails : Boolean
+*   @input Map : Object
+*
+*/
+
+var logger = require("dw/system/Logger");
+
+function execute( args : PipelineDictionary ) : Number
+{
+
+    var emarsysHelper : Object = new (require("./../util/EmarsysHelper"))(),
+		submitData,
+		request : Object = new Object();
+	
+	var map = args.Map,
+		method = args.Method;
+	
+	try {
+		
+		request = {
+			"keyId": "3",
+			"3": args.Email,
+		};
+		
+		// if source id value exists add it to request
+		emarsysHelper.addSourceIdToRequest(request);
+		
+		// check subscription type before assign value to field 31
+		if (args.SubscriptionType == "checkout") {
+			// if customer checked corresponding checkbox on billing page filed 31 with value 1 (true) added to request
+			if (args.SubscribeToEmails) {
+				request["31"] = 1;
+			}
+		} else if (args.SubscriptionType == "footer") {
+			request["31"] = 1;
+		} else if (args.SubscriptionType == "account") {
+			if (args.SubscribeToEmails) {
+				request["31"] = 1;
+			}
+		}
+		
+		// if subscription is acalled from checkout or signup page addFields function will add fields to request
+		emarsysHelper.addFields(map, request);
+		
+		// call to create contact data on Emarsys
+		submitData = emarsysHelper.triggerAPICall("emarsys.api", "contact", request, method);
+		
+		if (submitData.status !== "OK") {
+			logger.error("Submit data error:" + submitData.error + "] - ***Emarsys error message: " + submitData.errorMessage);
+			return PIPELET_ERROR;
+		}
+		
+	} catch(err) {
+		// log error message in case something goes wrong
+		logger.error("Error:" + err.lineNumber + "] - ***Emarsys submit contact data error message: " + err);
+		return PIPELET_ERROR;
+	}
+    
+    return PIPELET_NEXT;
+}

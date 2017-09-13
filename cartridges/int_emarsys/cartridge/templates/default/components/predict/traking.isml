@@ -1,0 +1,147 @@
+<iscomment>Emarsys Predict</iscomment>
+<isif condition="${dw.system.Site.current.getCustomPreferenceValue('emarsysPredictEnableJSTrackingCode')}" >
+    <iscomment>Availability Zone, use if site has multiple locales</iscomment>
+    <script type="text/javascript">
+        ScarabQueue.push(['availabilityZone', '<isprint value="${request.locale}" encoding="off" />']);
+    </script>
+
+    <iscomment>Information used to identify customer</iscomment>
+    <iscomment>
+    <isif condition="${customer.authenticated && customer.registered}">
+        <isif condition="${!empty(customer.profile.email)}">
+            <script type="text/javascript">
+                ScarabQueue.push(['setEmail', '<isprint value="${customer.profile.email}" encoding="off" />']);
+            </script>
+        <iselse>
+            <script type="text/javascript">
+                ScarabQueue.push(['setCustomerId', '<isprint value="${customer.profile.customerNo}" encoding="off" />']);
+            </script>
+        </isif>
+    </isif>
+    </iscomment>
+
+    <iscomment>Cart information availabe on page load</iscomment>
+    <isinclude template="components/predict/cartinfo" />
+
+    <isif condition="${pageContext.ns == 'product'}">
+        <script type="text/javascript">
+
+            // tracking command
+            ScarabQueue.push(['view', '<isprint value="${pdict.Product.ID}" encoding="off" />']);
+        </script>
+
+        <isif condition="${dw.system.Site.current.getCustomPreferenceValue('emarsysPredictPDPRecommendationType')!='disable'}">
+            <script type="text/javascript">
+                // recommendation widget initialization
+                ScarabQueue.push(['recommend', {
+                    logic: "${dw.system.Site.current.getCustomPreferenceValue('emarsysPredictPDPRecommendationType')}",
+                    containerId: 'predict-recs'
+                }]);
+            </script>
+        </isif>
+    <iselseif condition="${pageContext.ns == 'search' && pdict.ProductSearchResult.categorySearch}">
+        <isscript>
+            var doWhile = true;
+            var currentCategory = pdict.ProductSearchResult.category;
+            var categoryChain = [];
+            while(doWhile){
+                if(currentCategory !== null && currentCategory.parent !== null && currentCategory.ID !== 'root' && currentCategory.root !== true){
+                    if(currentCategory.online){
+                        categoryChain.unshift(currentCategory.displayName);
+                    }
+                    currentCategory = currentCategory.parent;
+                }else{
+                    doWhile = false;
+                    categoryChain = categoryChain.join(" > ");
+                }
+            }
+        </isscript>
+        <script type="text/javascript">
+
+            // tracking command
+            ScarabQueue.push(['category', '<isprint value="${categoryChain}" encoding="off" />']);
+        </script>
+        <isif condition="${dw.system.Site.current.getCustomPreferenceValue('emarsysPredictCategoryPageRecommendationType')!='disable'}">
+            <script type="text/javascript">
+                // recommendation widget initialization
+                ScarabQueue.push(['recommend', {
+                    logic: "${dw.system.Site.current.getCustomPreferenceValue('emarsysPredictCategoryPageRecommendationType')}",
+                    containerId: 'predict-recs'
+                }]);
+            </script>
+        </isif>
+    <iselseif condition="${pageContext.ns == 'search' && !empty(request.httpParameterMap.q.value)}">
+        <script type="text/javascript">
+
+            // tracking command
+            ScarabQueue.push(['searchTerm', '<isprint value="${request.httpParameterMap.q.value}" encoding="off" />']);
+        </script>
+        <isif condition="${dw.system.Site.current.getCustomPreferenceValue('emarsysPredictSearchPageRecommendationType')!='disable'}">
+            <script type="text/javascript">
+
+                // recommendation widget initialization
+                ScarabQueue.push(['recommend', {
+                    logic: "${dw.system.Site.current.getCustomPreferenceValue('emarsysPredictSearchPageRecommendationType')}",
+                    containerId: 'predict-recs'
+                }]);
+            </script>
+        </isif>
+    <iselseif condition="${pageContext.ns == 'orderconfirmation'}">
+        <isscript>
+            var useGrossPrice = dw.system.Site.current.getCustomPreferenceValue('emarsysUseGrossPrice');
+            var order = pdict.Order;
+            var orderObj = {};
+            orderObj['orderId'] = order.orderNo;
+            orderObj['items'] = [];
+            for each(var ProductLineItem in order.getProductLineItems()){
+                if(ProductLineItem.bonusProductLineItem || ProductLineItem.bundledProductLineItem){ continue; }
+
+                var prodObject = {
+                    'item' : ProductLineItem.productID,
+                    'price' : useGrossPrice == true ? parseFloat((ProductLineItem.adjustedGrossPrice.value).toFixed(2)) : parseFloat((ProductLineItem.adjustedNetPrice.value).toFixed(2)),
+                    'quantity' : ProductLineItem.quantityValue
+                }
+
+                orderObj['items'].push(prodObject);
+            }
+        </isscript>
+            <script type="text/javascript">
+
+                // tracking command
+                ScarabQueue.push(['purchase', <isprint value="${JSON.stringify(orderObj)}" encoding="off" />]);
+        </script>
+        <isif condition="${dw.system.Site.current.getCustomPreferenceValue('emarsysPredictThankYouForOrderPageRecommendationType')!='disable'}">
+            <script type="text/javascript">
+
+                // recommendation widget initialization
+                ScarabQueue.push(['recommend', {
+                    logic: "${dw.system.Site.current.getCustomPreferenceValue('emarsysPredictThankYouForOrderPageRecommendationType')}",
+                    containerId: 'predict-recs'
+                }]);
+            </script>
+        </isif>
+        <iselseif condition="${pageContext.ns == 'cart'}">
+            <isif condition="${dw.system.Site.current.getCustomPreferenceValue('emarsysPredictCartPageRecommendationType')!='disable'}">
+                <script type="text/javascript">
+                    // recommendation widget initialization
+                    ScarabQueue.push(['recommend', {
+                        logic: "${dw.system.Site.current.getCustomPreferenceValue('emarsysPredictCartPageRecommendationType')}",
+                        containerId: 'predict-recs'
+                    }]);
+                </script>
+            </isif>
+    <iselseif condition="${pageContext.ns == 'storefront' && dw.system.Site.current.getCustomPreferenceValue('emarsysPredictHomePageRecommendationType')!='disable'}">
+        <script type="text/javascript">
+            // recommendation widget initialization
+            ScarabQueue.push(['recommend', {
+                logic: "${dw.system.Site.current.getCustomPreferenceValue('emarsysPredictHomePageRecommendationType')}",
+                containerId: 'predict-recs'
+            }]);
+        </script>
+    </isif>
+
+    <iscomment>Submit all information available on page load</iscomment>
+    <script type="text/javascript">
+        ScarabQueue.push(['go']);
+    </script>
+</isif>

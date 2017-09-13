@@ -1,0 +1,21 @@
+<isscript>
+    var useGrossPrice = dw.system.Site.current.getCustomPreferenceValue('emarsysUseGrossPrice');
+    var cart = pdict.Basket;
+    var cartObj = [];
+    if(cart != null){
+        for each(var ProductLineItem in cart.getProductLineItems()){
+            if(ProductLineItem.bonusProductLineItem || ProductLineItem.bundledProductLineItem){    continue; }
+            
+            var prodObject = {
+                'item' : ProductLineItem.productID,
+                'price' : useGrossPrice == true ? parseFloat((ProductLineItem.adjustedGrossPrice.value).toFixed(2)) : parseFloat((ProductLineItem.adjustedNetPrice.value).toFixed(2)),
+                'quantity' : ProductLineItem.quantityValue
+            }
+            
+            cartObj.push(prodObject);
+        }
+    }
+</isscript>    
+<script type="text/javascript">
+    ScarabQueue.push(['cart', <isprint value="${JSON.stringify(cartObj)}" encoding="off" />]);
+</script>

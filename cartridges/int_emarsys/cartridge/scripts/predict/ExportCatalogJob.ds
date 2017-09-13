@@ -1,0 +1,112 @@
+/**
+*   Script for retrieving, exporting and remote uploading the Catalog data
+*
+*   @output ErrorMsg : String
+*/
+var system = require('dw/system'),
+    util   = require('dw/util'),
+    obj    = require('dw/object'),
+    net    = require('dw/net'),
+    io     = require('dw/io'),
+    catalog = require('dw/catalog');
+
+function execute( args : PipelineDictionary ) : Number {
+
+    var emarsysHelper : Object = new (require("./../util/EmarsysHelper"))(),
+        exportFolderName : String = system.Site.getCurrent().getCustomPreferenceValue("emarsysPredictIMPEXFolder"),
+        //FTP configuration
+        sftpUsername = system.Site.getCurrent().getCustomPreferenceValue("emarsysPredictSFTPUsername"),
+        sftpPassword = system.Site.getCurrent().getCustomPreferenceValue("emarsysPredictSFTPPassword"),
+        sftpHost = system.Site.getCurrent().getCustomPreferenceValue("emarsysPredictSFTPHost"),
+        sftpPath = system.Site.getCurrent().getCustomPreferenceValue("emarsysPredictSFTPPath"),
+        //Retrieve site catalog
+        siteCatalog = catalog.CatalogMgr.getSiteCatalog(),
+        //Retrieve Predict configuration
+        predictConfig : obj.CustomObject = obj.CustomObjectMgr.getCustomObject("EmarsysPredictConfig", "predictConfig");
+
+    try {
+        if (!empty(sftpUsername) && !empty(sftpPassword) && !empty(sftpHost) && !empty(siteCatalog) && !empty(predictConfig)) {
+
+            //Create CSV
+            var calendar : Calendar = new util.Calendar(),
+                currentDate : String = util.StringUtils.formatCalendar(calendar, "YYYYMMDDHHss"),
+                siteID = system.Site.current.getID(),
+                exportFolderPath = io.File.IMPEX + "/src/" + exportFolderName,
+                exportFolder = new io.File(exportFolderPath);
+
+            if (!exportFolder.exists()) {
+                exportFolder.mkdirs();
+            }
+            var exportFile = new io.File(exportFolder.fullPath + io.File.SEPARATOR + "products_" + siteID + ".csv"),
+                fileWriter  = new io.FileWriter(exportFile, "utf-8"),
+                writer = new io.CSVStreamWriter(fileWriter, ',', '"');
+
+            //Write CSV header
+            var mappedFields = JSON.parse(predictConfig.custom.mappedFields),
+                columnNames = [];
+            mappedFields.forEach(function(key, val) {
+                columnNames.push(key.placeholder);
+            });
+
+            writer.writeNext(columnNames);
+
+            //Query the catalog
+            var products =  catalog.ProductMgr.queryProductsInCatalog(siteCatalog),
+                productInfo = [];
+
+            while (products.hasNext()) {
+                var product = products.next(),
+                    exportType = predictConfig.custom.exportType;
+
+                //Are we exporting all products or master products only?
+                if( (exportType == "master" && product.isMaster()) || (exportType == "variations" && !product.isMaster()) ) {
+                    emarsysHelper.getProductInfo(mappedFields, product, productInfo);
+                }
+            }
+
+            //Write product info
+            productInfo.forEach(function(key, val) {
+                writer.writeNext(productInfo[val]);
+            });
+
+            //Upload to SFTP
+            var sftp = new net.SFTPClient(),
+                connectionStatus = sftp.connect(sftpHost, sftpUsername, sftpPassword);
+            if (connectionStatus) {
+                if (sftpPath) {
+                    var fileInfo = sftp.getFileInfo(sftpPath);
+                    if (empty(fileInfo) || !fileInfo.directory) {
+                        sftp.mkdir(sftpPath);
+                    }
+                    sftp.putBinary(sftpPath + "/" + exportFile.name, exportFile);
+                } else {
+                    sftp.putBinary("/" + exportFile.name, exportFile);
+                }
+                exportFile.remove();
+            } else {
+                //We couldn't connect to the FTP server
+                system.Logger.error("[predict/ExportCatalogJob.ds] - ***Emarsys Predict catalog feed error: FTP connection could not be established (host: " + sftpHost + ", username: " + sftpUsername + ")");
+                args.ErrorMsg = "FTP connection could not be established (host: " + sftpHost + ", username: " + sftpUsername + ")";
+                return PIPELET_ERROR;
+            }
+
+            //Clear resources
+            products.close();
+            writer.close();
+            fileWriter.close();
+            sftp.disconnect();
+
+        } else {
+            system.Logger.error("[predict/ExportCatalogJob.ds] - ***Emarsys Predict catalog feed error: Please fill in your FTP credentials / assign a catalog / setup Predict");
+            args.ErrorMsg = "Please fill in your FTP credentials / assign a catalog / setup Predict";
+            return PIPELET_ERROR;
+        }
+
+    } catch (err) {
+        system.Logger.error("[predict/ExportCatalogJob.ds #" + err.lineNumber + "] - ***Emarsys Predict catalog job export error: " + err);
+        args.ErrorMsg = err.toString();
+        return PIPELET_ERROR;
+    }
+
+    return PIPELET_NEXT;
+}

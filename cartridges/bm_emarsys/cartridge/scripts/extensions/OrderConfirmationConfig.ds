@@ -1,0 +1,124 @@
+/**
+* The script for managing order confirmation email configuration
+*   @input  Data : Object;
+*   @input  BatchElements : Object;
+*   @input  BatchPlaceholders : Object;
+*   @input  BatchRemove : Object;
+*   @output AvailableEvents : Object
+*   @output AvailableElements : Object
+*   @output AvailableElementsJSON : String
+*   @output AvailableElementsCount : Number
+*   @output StoredConfiguration : Object
+*   @output Errors : Object
+*   @output Success : Boolean
+*   @output CustomError : String;
+*/
+var system = require('dw/system'),
+    util   = require('dw/util'),
+    web    = require('dw/web'),
+    obj    = require('dw/object');
+
+function execute( args : PipelineDictionary ) : Number {
+
+    var UniqueObjectKey : String = "StoredEvents",
+        ExternalEventsObject : obj.CustomObject = obj.CustomObjectMgr.getCustomObject("EmarsysExternalEvents", UniqueObjectKey),
+        configurationType : String = "orderconf",
+        OrderConfConfigurationObject : obj.CustomObject = obj.CustomObjectMgr.getCustomObject("EmarsysTransactionalEmailsConfig", configurationType),
+        OrderElements : Object = system.Site.getCurrent().getCustomPreferenceValue("emarsysOrderConfirmationElements"),
+        data : Object = args.Data,
+        selectData : Object = [],
+        pairedData = [],
+        duplicates = [],
+        mappedFields;
+
+    try {
+
+        //Check for stored preferences
+        if(!empty(ExternalEventsObject)) {
+            args.AvailableEvents = JSON.parse(ExternalEventsObject.custom.result);
+        } else {
+            args.Errors = { name : web.Resource.msg("orderconf.noevents.error.title", "emails_orderconfirmation", null), body : web.Resource.msg("orderconf.noevents.error.body", "emails_orderconfirmation", null) };
+        }
+
+        //Check for defined order elements
+        if(!empty(OrderElements)) {
+            args.AvailableElements = JSON.parse(OrderElements);
+            for(var i = 0; i<args.AvailableElements.length; i++) {
+                selectData.push(args.AvailableElements[i]);
+            }
+            args.AvailableElementsJSON = JSON.stringify({ selectOptions : selectData });
+            args.AvailableElementsCount = args.AvailableElements.length;
+        } else {
+            args.Errors = { name : web.Resource.msg("orderconf.noelements.error.title", "emails_orderconfirmation", null), body : web.Resource.msg("orderconf.noelements.error.body", "emails_orderconfirmation", null) };
+        }
+
+        if(!empty(OrderConfConfigurationObject)) {
+            args.StoredConfiguration = { externalEvent : OrderConfConfigurationObject.custom.externalEvent, mappedFields : JSON.parse(OrderConfConfigurationObject.custom.mappedFields) };
+        } else {
+            //If no settings are present, load defaults
+            var CF : obj.CustomObject = obj.CustomObjectMgr.createCustomObject("EmarsysTransactionalEmailsConfig", configurationType);
+            CF.custom.externalEvent = data.externalEvent.value;
+            CF.custom.mappedFields = mappedFields;
+            args.StoredConfiguration = { externalEvent : CF.custom.externalEvent, mappedFields : JSON.parse(CF.custom.mappedFields) };
+        }
+
+        //Has the form been submitted?
+        if(!empty(data)) {
+            //For multiple field values
+            if(!empty(args.BatchElements) && !empty(args.BatchPlaceholders)) {
+                var totalElements = args.BatchElements.length;
+                var totalRemovedElements = !empty(args.BatchRemove) ? args.BatchRemove.length : 0;
+
+                //Store
+                for(var i = 0; i<totalElements; i++) {
+                    var add = true;
+                        if (!empty(args.BatchRemove)) {
+                            for each (var field in args.BatchRemove) {
+                                if (field == i) {
+                                    add = false;
+                                    break;
+                                }
+                            }
+                        }
+
+                    if(add) {
+                        pairedData.push({ field : args.BatchElements[i], placeholder : args.BatchPlaceholders[i].trim() });
+                    }
+                }
+
+                mappedFields = JSON.stringify(pairedData);
+            } else {
+                if(!empty(data.mappedField.value) && !empty(data.placeholder.value)) {
+                    mappedFields = JSON.stringify( [{ field : data.mappedField.value, placeholder : data.placeholder.value.trim() }] );
+                }
+            }
+
+            if(!empty(mappedFields) && !empty(data.externalEvent.value)) {
+                if(totalElements > OrderElements.length) {
+                    args.Success = false;
+                    args.CustomError = web.Resource.msg("orderconf.oversized_count.error", "emails_orderconfirmation", null);
+                } else {
+                    //Update configuration
+                    obj.CustomObjectMgr.remove(OrderConfConfigurationObject);
+                    var Update : obj.CustomObject = obj.CustomObjectMgr.createCustomObject("EmarsysTransactionalEmailsConfig", configurationType);
+                    Update.custom.externalEvent = data.externalEvent.value;
+                    Update.custom.mappedFields = mappedFields;
+
+                    //Output updates
+                    args.StoredConfiguration = { externalEvent : Update.custom.externalEvent, mappedFields : JSON.parse(Update.custom.mappedFields) };
+                    args.Success = true;
+                }
+            } else {
+                args.Success = false;
+                args.CustomError = web.Resource.msg("orderconf.missing_field_values.error", "emails_orderconfirmation", null);
+            }
+        }
+
+
+    } catch (err) {
+          system.Logger.error("[OrderConfirmationConfig.ds #" + err.lineNumber + "] - ***Emarsys order confirmation configuration error message: " + err);
+          return PIPELET_ERROR;
+    }
+
+    return PIPELET_NEXT;
+}

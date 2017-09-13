@@ -1,0 +1,8 @@
+<iscontent type="text/javascript" charset="UTF-8" compact="true"/>
+<isscript>
+	importScript("util/Resource.ds");
+</isscript>
+
+(function(){
+	window.Resources = <isprint value="${JSON.stringify(ResourceHelper.getResources())}" encoding="off"/>;
+}());

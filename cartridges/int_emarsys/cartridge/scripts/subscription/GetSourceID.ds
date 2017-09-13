@@ -1,0 +1,67 @@
+/**
+* Demandware Script File
+* to create a source, get its id and store it in custom sute pref
+*
+*/
+
+var logger = require("dw/system/Logger");
+
+function execute( args : PipelineDictionary ) : Number
+{
+
+    var emarsysHelper : Object = new (require("./../util/EmarsysHelper"))(),
+		createSource,
+		getAllSources,
+		sourceId,
+		request : Object = new Object();
+		
+	var sourceName = dw.system.Site.current.preferences.custom.emarsysSourceName;	
+	
+	try {
+		
+		request = {
+			"name": sourceName
+		};
+
+		getAllSources = emarsysHelper.triggerAPICall("emarsys.api", "source", {}, "GET");
+		
+		if (getAllSources.status == "OK") {
+			// if source exists the id will be returned
+			sourceId = emarsysHelper.getSourceId(getAllSources, sourceName);
+		} else {
+			logger.error("Get resources error:" + getAllSources.error + "] - ***Emarsys error message: " + getAllSources.errorMessage);
+			return PIPELET_ERROR;
+		}
+		
+		// if no value was assigned to sourceId made a call to create a resource and a call to get all sources to retrieve source id
+		if (!sourceId) {
+			// create a source
+			createSource = emarsysHelper.triggerAPICall("emarsys.api", "source/create", request, "POST");
+			
+			if (createSource.status == "OK") {
+				// if source exists the id will be returned
+				getAllSources = emarsysHelper.triggerAPICall("emarsys.api", "source", {}, "GET");
+				
+				if (getAllSources.status == "OK") {
+					// if source exists the id will be returned
+					sourceId = emarsysHelper.getSourceId(getAllSources, sourceName);
+				} else {
+					logger.error("Get sources error:" + getAllSources.error + "] - ***Emarsys error message: " + getAllSources.errorMessage);
+					return PIPELET_ERROR;
+				}
+			} else {
+				logger.error("Create source error:" + getAllSources.error + "] - ***Emarsys error message: " + getAllSources.errorMessage);
+				return PIPELET_ERROR;
+			}
+		}
+		
+		//args.SourceID = sourceId;
+		dw.system.Site.current.setCustomPreferenceValue('emarsysSourceID', sourceId);
+	} catch(err) {
+		// log error message in case something goes wrong
+		logger.error("[GetSourceID.ds #" + err.lineNumber + "] - ***Emarsys get source data error message: " + err);
+		return PIPELET_ERROR;
+	}
+		
+    return PIPELET_NEXT;
+}

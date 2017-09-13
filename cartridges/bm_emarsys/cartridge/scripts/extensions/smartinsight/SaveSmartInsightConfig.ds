@@ -1,0 +1,96 @@
+/**
+* Demandware Script File
+* To save SmartInsight config data config in CO
+*
+*   @input CurrentHttpParameterMap : Object
+*   @output Success : Boolean
+*   @output Errors : Object
+*
+*/
+var customObjectMgr = require('dw/object/CustomObjectMgr'),
+	logger = require("dw/system/Logger"),
+	web = require("dw/web");
+
+function execute( args : PipelineDictionary ) : Number
+{
+	try {
+		var formMap = args.CurrentHttpParameterMap;
+		
+		// get custom object instance, if doesn't exists the create it
+	    var co = customObjectMgr.getCustomObject('EmarsysSmartInsightConfiguration', 'emarsysSmartInsight');
+	    if (!co) {
+	    	var co = customObjectMgr.createCustomObject('EmarsysSmartInsightConfiguration', 'emarsysSmartInsight');
+	    }
+	    
+	    var fields : Array = new Array(),			// list of selected mapped fileds
+	    	placeholders : Array = new Array(),		// list of placeholders
+	    	removedFields;							// list of fields to remove
+	    
+	    // read mapped fields values from collection and put it in the list
+	    for each (var filed in formMap.dwfrm_smartinsight__config_mappedField.values) {
+	    	fields.push(filed);
+	    }
+	    
+	    // read placeholders fields values from collection and put it in the list
+	    for each (var placeholder in formMap.dwfrm_smartinsight__config_placeholder.values) {
+	    	placeholders.push(placeholder);
+	    }
+	    
+	    // if there are any fields to remove, put the in the list
+	    if (formMap.dwfrm_emails__shippingconfirmation_removeField !==  null) {
+	    	removedFields = formMap.dwfrm_smartinsight__config_removeField.values;
+	    }
+	    
+	    var mappedFields : Array = new Array(),		// array of objects, each object has this structure {field: ..., placeholder: ...}
+	    	existingFields : Array = new Array(),	// list of existing fields to check for doubles
+	    	existingplaceholders : Array = new Array();	// list of existing fields to check for doubles
+	    
+	    var emptyFieldValue = web.Resource.msg('form.available.elements.option', 'emails_configuration', null);	
+	    for (var i = 0; i < fields.length; i++) {
+	    	var mappedField = null;		// object that will be added to the mappedFields list
+	    	let field = fields[i],
+	    		placeholder = placeholders[i];
+	    		
+	    	// if mapped field is not empty and wasn't added yet and if placeholder is not empty, add pairs to mappedField object
+	    	var removed = false;
+	    	if (removedFields) {
+		    	for each (var removedField in removedFields) {
+		    		if (removedField == i) {
+				    	removed = true;
+				    	break;
+		    		}
+		    	}
+	    	}
+	    	if (!removed) {
+		    	if (field.length > 0 && field !== emptyFieldValue && existingFields.indexOf(field) == -1
+		    		&& placeholder.length > 0 && existingplaceholders.indexOf(placeholder) == -1) {
+		    		
+		    		mappedField = {};
+		    		
+		    		mappedField.field = field;
+		    		mappedField.placeholder = placeholder;
+		    		
+		    		existingFields.push(field);
+		    		existingplaceholders.push(placeholder);
+		    	}
+	    	}
+	    	
+	    	// if object was filled add it to the list
+	    	if (mappedField) {
+	    		mappedFields.push(mappedField);
+	    	}
+	    }
+	    
+	    co.custom.mappedFields = JSON.stringify(mappedFields);
+	    
+	    args.Success = true;
+	    
+	} catch(err) {
+		// log error message in case something goes wrong
+		logger.error("[SaveSmartInsightConfig.ds #" + err.lineNumber + "] - ***Emarsys save SmartInsight config data error message: " + err);
+    	args.Success = false;
+    	args.Errors = {"name": web.Resource.msg("save.data.error", "save.data.error", null), "body": web.Resource.msg("contact.administrator", "emails_configuration", null)};
+	}
+
+    return PIPELET_NEXT;
+}

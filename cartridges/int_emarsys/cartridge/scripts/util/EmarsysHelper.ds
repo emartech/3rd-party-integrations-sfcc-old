@@ -1,0 +1,782 @@
+/**
+ * Helper class for working with Emarsys API
+ *
+ */
+
+
+var util = require("dw/util"),
+    crypto = require("dw/crypto"),
+    web = require("dw/web"),
+    value = require("dw/value"),
+    catalog = require("dw/catalog"),
+    order = require("dw/order"),
+    svc = require("dw/svc"),
+    system = require("dw/system"),
+    priceBookMgr = require("dw/catalog/PriceBookMgr"),
+    sftpClient = require("dw/net/SFTPClient"),
+    logger = require("dw/system/Logger"),
+    io = require("dw/io");
+
+function EmarsysHelper() {
+
+    this.triggerAPICall = function (serviceName, endpoint, requestBody, requestMethod) {
+
+        var service = svc.ServiceRegistry.get(serviceName);
+
+        /* API Auth Config */
+
+        var date = new Date(),
+            secret = system.Site.current.preferences.custom.emarsysAPIPassword,
+            username = system.Site.current.preferences.custom.emarsysAPIUsername,
+            created = date.toISOString(),
+            Random = new crypto.SecureRandom(),
+            RandomBytes = Random.generateSeed(16),
+            nonce = crypto.Encoding.toHex(RandomBytes),
+            hashing = new crypto.MessageDigest(crypto.MessageDigest.DIGEST_SHA_1),
+            passwordDigest = nonce + created + secret;
+
+        // construct the password encoded string
+        passwordDigest = util.StringUtils.encodeBase64(hashing.digest(new util.Bytes(passwordDigest)));
+
+        var auth = util.StringUtils.format("UsernameToken Username=\"{0}\", PasswordDigest=\"{1}\", Nonce=\"{2}\", Created=\"{3}\"", username, passwordDigest, nonce, created);
+
+        /* Append AUTH header */
+        service.addHeader("X-WSSE", auth);
+
+        /* Dinamically create the API URL and endpoint based on site prefs value and endpoint */
+        service.URL = util.StringUtils.format(service.URL, dw.system.Site.current.preferences.custom.emarsysEnvironment) + endpoint;
+
+        /* Set the proper request method */
+        switch (requestMethod) {
+
+            default:
+            case 'POST':
+                service.setRequestMethod("POST");
+                service.addHeader("Content-Type", "application/json");
+                break;
+
+            case 'GET':
+                service.setRequestMethod("GET");
+                break;
+
+            case 'PUT':
+                service.setRequestMethod("PUT");
+                service.addHeader("Content-Type", "application/json");
+                break;
+
+            case 'DELETE':
+                service.setRequestMethod("DELETE");
+                break;
+        }
+
+        /* Fetch the result */
+        var serviceCallResult;
+        if (!empty(requestBody)) {
+            serviceCallResult = service.call(requestBody);
+        } else {
+            serviceCallResult = service.call();
+        }
+
+        return serviceCallResult;
+
+    };
+
+    this.getSourceId = function (callResult, name) {
+        var dataObj = JSON.parse(callResult.object),
+            sources = dataObj.data,
+            sourceId;
+
+        for (var i = 0; i < sources.length; i++) {
+            var source = sources[i];
+            if (source.name == name) {
+                sourceId = source.id;
+                break;
+            }
+        }
+        return sourceId;
+    };
+
+    this.getEmptyFields = function (map, response) {
+        var emptyFields = new Array();
+        for (id in map) {
+            if (!response[id]) {
+                emptyFields.push(id);
+            }
+        }
+        return emptyFields;
+    };
+
+    this.addFields = function (map, requestBody) {
+        if (map) {
+            // add new fields
+            for (var id in map) {
+                if (id == 5) {
+                    requestBody[id] = this.convertGenderCode(map[id]);
+                } else if (id == 14) {
+                    requestBody[id] = this.convertCountryCode(map[id]);
+                } else {
+                    if (map[id]) {
+                        requestBody[id] = map[id];
+                    }
+                }
+            }
+        }
+    };
+
+ /**
+     * Method adds object's specified keys' values to map object which is used to populate request body sent to emarsys
+     * @param {Object} object Object to retrieve data from
+     * @param {Object} map Object to add data to
+     */
+    this.addDataToMap = function(object, map) {
+        // read site preference value with emarsys ids for fields
+        var emarsysIdsMap = JSON.parse(dw.system.Site.current.preferences.custom.emarsysContactFieldsMap);
+
+        for each (var key in Object.keys(emarsysIdsMap)) {
+            var attribute = emarsysIdsMap[key],
+                value = null;
+
+            value = this.getValues(attribute, object, 0);
+
+            if (typeof(value) == 'object') {
+                value = value.value;
+            }
+
+            if (value) {
+                map[key] = value;
+            }
+        }
+
+        // if addres2 property is not null add it to the address field
+        if ("address2" in object && object.address2) {
+            map["10"] += ", " + object.address2;
+        }
+    };
+
+
+
+
+    this.escapeCSVField = function (field) {
+        field = field ? field.toString().replace(/"/g, '\"\"') : "";
+        if(field.search(',')!=-1){
+            field = "\""+field+"\"";
+        }
+        return field;
+    };
+
+    this.convertCountryCode = function (countryCode) {
+        var countryCodes = JSON.parse(dw.system.Site.current.preferences.custom.emarsysCountryCodes);
+        return countryCodes[countryCode];
+    };
+
+    this.convertGenderCode = function (gender) {
+        var genderCodes = JSON.parse(dw.system.Site.current.preferences.custom.emarsysGenderCodes);
+        return genderCodes[gender];
+    };
+
+    this.getValues = function (field, object, skipLoop) {
+        /*
+           This function transforms the field string into an object and iterates
+           through the object parameter to find values.
+           If you only have one attribute to go through, use skipLoop = 1;
+        */
+        if(!empty(field)) {
+            var toObject = field.split("."),
+                attributes;
+
+            if (skipLoop === 1) {
+                if (toObject[1] in object) {
+                    attributes = object[toObject[1]];
+                } else {
+                    attributes = '';
+                }
+            } else if (skipLoop === 0) {
+                attributes = toObject[0] in object ? object[toObject[0]] : '';
+            }
+
+            toObject.forEach( function (val, key) {
+                if (skipLoop) {
+                    if(key != 0 && key != 1) {
+                        attributes = attributes[val];
+                    }
+                } else {
+                    if(key != 0) {
+                        attributes = val in attributes ? attributes[val] : '';
+                    }
+                }
+            });
+
+            if (attributes instanceof dw.value.Money) {
+                attributes = attributes.getValueOrNull() || '0';
+            }
+            try{
+                if (typeof(attributes) == 'object') {
+                    attributes = attributes.value;
+                } else if(typeof(attributes) == 'string') {
+                    attributes = attributes;
+                }
+            } catch(e){
+                attributes = attributes || '';
+            }
+
+            if (attributes instanceof Date) {
+                attributes = this.formatDate(attributes, '-', ':');
+            }
+
+            return attributes;
+        }
+    };
+
+    this.getProductInfo = function (mappedFields, product, dataObject) {
+        if (mappedFields && product && dataObject) {
+            var url = this.returnProductURL(product),
+                productInfo = [];
+
+            for (var j = 0; j < mappedFields.length; j++) {
+
+                var placeholder = mappedFields[j].placeholder,
+                    field = mappedFields[j].field,
+                    splitField = mappedFields[j].field.split(".");
+
+                switch (splitField[0]) {
+
+                    case 'product':
+                        if (splitField[1] == "url") {
+                            productInfo.push(url.toString());
+                        } else if (splitField[1] == "image") {
+                            var viewType = dw.system.Site.current.preferences.custom.emarsysProductImageSize,
+                                parsedImage = product.getImage(viewType) !== null ? product.getImage(viewType).getAbsURL().toString() : "";
+                            productInfo.push(parsedImage);
+                        } else if (splitField[1] == "price") {
+                            var productPrice = product.getPriceModel().getMaxPrice();
+                            if(product instanceof dw.catalog.Variant){
+                                productPrice = product.getPriceModel().getPrice();
+                            }
+                            var priceValue = productPrice.getValueOrNull();
+                            if (!empty(priceValue)) {
+                                productInfo.push(priceValue.toFixed(2));
+                            } else {
+                                productInfo.push("");
+                            }
+
+                        } else if (splitField[1] == "availability") {
+                            productInfo.push(product.getAvailabilityModel().isOrderable());
+                        } else if (splitField[1] == "categories") {
+                            var categories = product.getOnlineCategories().toArray();
+                            var path : dw.util.Collection = new dw.util.ArrayList();
+                            var pathsArray : dw.util.Collection = new dw.util.ArrayList();
+
+                            if(product instanceof dw.catalog.Variant){
+                                categories = product.masterProduct.getOnlineCategories().toArray();
+                            }
+                            var category;
+
+                            if (categories.length > 0) {
+                                for (var i = 0; i < categories.length; i++) {
+                                    category = categories[i];
+                                    path = new dw.util.ArrayList();
+                                    // find the path for each of the categories
+                                    while( category.parent != null )
+                                    {
+                                        if( category.online ) path.addAt( 0, category.displayName );
+                                        category = category.parent;
+                                    }
+                                    pathsArray.push(path.join(" > "));
+                                }
+                                // push all the categories separated by |
+                                productInfo.push(pathsArray.join("|"));
+                            } else {
+                                productInfo.push('');
+                            }
+                        // get the user friendly name of variation attribute
+                        } else if (product instanceof dw.catalog.Variant && splitField[1] == "custom") {
+                            var productVariationAttributes = system.Site.getCurrent().getCustomPreferenceValue("emarsysPredictVariationAttributes");
+
+                               // find the variation attributes from emarsysPredictVariationAttributes site preference
+                            if (productVariationAttributes.indexOf(mappedFields[j].field) != -1) {
+                                var selectedAttribute = product.variationModel.getProductVariationAttribute(splitField[2]);
+                                if (!empty(selectedAttribute)) {
+                                    var selectedValue = product.variationModel.getSelectedValue(selectedAttribute);
+                                    // get the display value of variation attribute
+                                    var variantValue = selectedValue.displayValue || selectedValue.value;
+                                    productInfo.push(variantValue);
+                                } else {
+                                    productInfo.push('');
+                                }
+                            }
+                        }
+                         else {
+                            productInfo.push(this.getObjectAttr({product: product}, splitField));
+                        }
+
+                    break;
+                }
+            }
+
+            dataObject.push(productInfo);
+        }
+    };
+
+    this.appendProductInfo = function (mappedFields : Object, order : Object, dataObject : Object) {
+        if (mappedFields && order && dataObject) {
+
+            for (var i = 0; i < order.shipments[0].productLineItems.length; i++) {
+
+                //Needed vars
+                var productLineItem = order.shipments[0].productLineItems[i],
+                    catalogProduct = catalog.ProductMgr.getProduct(productLineItem.productID),
+                    rebate = "",
+                    url;
+
+                //Get product URL
+                url = this.returnProductURL(productLineItem);
+
+                //Get product price adjustments
+                rebate = this.returnProductRebate(productLineItem);
+
+                //Add product
+                var addProduct = {};
+
+                for (var j = 0; j < mappedFields.length; j++) {
+
+                    var placeholder = mappedFields[j].placeholder,
+                        field = mappedFields[j].field,
+                        splitField = mappedFields[j].field.split(".");
+
+                    switch (splitField[0]) {
+
+                        case 'product':
+                          if (splitField[1] == "url") {
+                            addProduct[placeholder] = url.toString();
+                          } else if(splitField[1] == "image") {
+                              var viewType = dw.system.Site.current.preferences.custom.emarsysProductImageSize;
+                            addProduct[placeholder] = productLineItem.product.getImage(viewType) !== null ? productLineItem.product.getImage(viewType).getAbsURL().toString() : "";
+                          } else if (splitField[1] == "rebate") {
+                            addProduct[placeholder] = rebate;
+                          } else {
+                            addProduct[placeholder] = this.getValues(field, productLineItem, 1);
+                          }
+
+                        break;
+                            break;
+
+                        case 'productItemPrice':
+                            addProduct[placeholder] = productLineItem.proratedPrice.toFormattedString();
+                        break;
+
+                        case 'productItemGrossPrice':
+                            addProduct[placeholder] = productLineItem.proratedPrice.add(productLineItem.adjustedTax).toFormattedString();
+                        break;
+
+                        case 'productItemTax':
+                            addProduct[placeholder] = productLineItem.adjustedTax.toFormattedString();
+                        break;
+
+                    }
+                }
+
+                dataObject.push(addProduct); //append the product to our product list
+            }
+        }
+    };
+
+    this.appendGlobalMappedFieldsObject = function ( mappedFields : Object, dataObject : Object, order : Object) {
+        /* This function adds order information to the JSON object sent to Emarsys */
+        if (!empty(mappedFields) && !empty(dataObject) && !empty(order)) {
+
+            for (var i = 0; i < mappedFields.length; i++) {
+
+                var placeholder = mappedFields[i].placeholder,
+                    field = mappedFields[i].field,
+                    splitField = mappedFields[i].field.split("."),
+                    value = null;
+
+                switch (splitField[0]) {
+
+                    /*  Billing address
+                        The available element should starts with 'billingAddress' and it should contain real attributes
+                        in this way we get needed values from billingAddress object.
+                        Examples: billingAddress.address1, billingAddress.postalCode, billingAddress.countryCode.displayValue, etc.
+                    */
+                    case 'billingAddress':
+                        dataObject[placeholder] = this.getValues(field, order, 0);
+                        break;
+
+                    /*  Shipping address
+                        The available element should starts with 'shippingAddress' and it should contain real attributes
+                        in this way we get needed values from order.shipments[0].shippingAddress object.
+                        Examples: shippingAddress.address1, shippingAddress.postalCode, shippingAddress.countryCode.displayValue, etc.
+                    */
+                    case 'shippingAddress':
+                        dataObject[placeholder] = this.getValues(field, order.shipments[0], 0);
+                        break;
+
+                    /*  General order attributes
+                        The available element should starts with 'order' and it should contain real attributes
+                        in this way we get needed values from order object.
+                        Examples: order.orderNo, order.creationDate, etc.
+                    */
+                    case 'order':
+                        dataObject[placeholder] = this.getValues(field, order, 1);
+                        break;
+
+                    /*  Tracking number
+                        Separate case for 'trackingNumber' element only.
+                    */
+                    case 'trackingNumber':
+                        dataObject[placeholder] = order.shipments[0].trackingNumber;
+                    break;
+
+                    /*  Delivery method
+                        Separate case for 'deliveryMethod.display' element only.
+                        It reads shipping method name and description from order.shipments[0].shippingMethod object
+                    */
+                    case 'deliveryMethod':
+                        dataObject[placeholder] = order.shipments[0].shippingMethod.displayName + " - " + order.shipments[0].shippingMethod.description;
+                        break;
+
+                    /*  Payment method
+                        Separate case for 'paymentMethod.display' element only.
+                        It reads 1st payment method from order object
+                    */
+                    case 'paymentMethod':
+                        dataObject[placeholder] = order.paymentInstruments[0].paymentMethod;
+                    break;
+
+                    /*  Order rebate
+                        Separate case for 'orderRebate' element only.
+                    */
+                    case 'orderRebate':
+                        dataObject[placeholder] = this.returnOrderRebate(order).toFormattedString();
+                        break;
+
+                    /*  Shipping costs
+                        Separate case for 'shippingCosts.display' element only,
+                        it reads shipping total price from order.shipments[0] object
+                    */
+                    case 'shippingCosts':
+                        dataObject[placeholder] = order.shipments[0].shippingTotalPrice.toFormattedString();
+                    break;
+
+                    /* Tracking number, shipment company, date of arrival, tracking link,
+                        should have the following element definition:
+                        custom.shipmentTrackingNumber
+                        custom.shippingCompany
+                        custom.arrivalDate
+                        custom.trackingLink
+                        The available element should starts with 'custom',
+                        it reads custom attributes values from order.shipments[0] object
+                    */
+                    case 'custom':
+                        dataObject[placeholder] = this.getValues(field, order.shipments[0].custom, 1);
+                        break;
+                }
+            }
+        }
+    };
+
+    /**
+     * Returns string with order payment methods
+     * @param order
+     * @returns {string}
+     */
+    this.returnOrderPaymentMethods = function (order) {
+        var paymentMethods = [];
+        order.getPaymentInstruments().toArray().forEach(function(paymentInstrument){
+            paymentMethods.push(paymentInstrument.getPaymentMethod());
+        });
+        return paymentMethods.join('+');
+    };
+
+    /**
+     * Returns attributes from order object
+     * @param order
+     * @param attributes
+     * @returns {*}
+     */
+    this.getOrderValues = function (order, attributes) {
+        switch (attributes[0]) {
+
+            /*
+            Order rebate
+            Separate case for 'orderRebate' element only.
+             */
+            case 'orderRebate':
+                return this.returnOrderRebate(order);
+                break;
+            /*
+            List of payment methods
+             */
+            case 'paymentMethods':
+                return this.returnOrderPaymentMethods(order);
+                break;
+            default:
+                return this.getObjectAttr(order, attributes);
+                break;
+        }
+    };
+
+    /**
+     * Returns attributes from product object
+     * @param productLineItem
+     * @param attributes
+     * @returns {*}
+     */
+    this.getProductValues = function (productLineItem, attributes) {
+
+        try{
+            var product = productLineItem.product;
+        } catch(e){
+            return '';
+        }
+
+        switch (attributes[0]) {
+            /*
+             Link to product in storefront
+             */
+            case "url":
+                return this.returnProductURL(productLineItem).toString();
+            /*
+             Product main image url
+             */
+            case "image":
+                var viewType = dw.system.Site.current.preferences.custom.emarsysProductImageSize;
+                return productLineItem.product.getImage(viewType) !== null ? productLineItem.product.getImage(viewType).getAbsURL().toString() : "";
+            /*
+             Product rebate
+             */
+            case "rebate":
+                return this.returnProductRebate(productLineItem);
+            /*
+             Other product attributes
+             */
+            default:
+                return this.getObjectAttr(product, attributes);
+        }
+    };
+
+    /**
+     * Returns attributes from ProductLineItem and GiftCertificateLineItem object types
+     * @param lineItem  - object of type ProductLineItem or GiftCertificateLineItem
+     * @param attributes
+     * @returns {*}
+     */
+    this.getLineItemValues = function(lineItem, attributes){
+        return this.getObjectAttr(lineItem, attributes);
+    };
+
+    /**
+     * returns object attribute
+     * @param obj
+     * @param attributes - array of attributes
+     * @returns {*}
+     */
+    this.getObjectAttr = function (obj, attributes) {
+
+        // if we have no attributes, then return empty string
+        if (!attributes.length) {
+            return '';
+        }
+
+        // set attribute as first attribute from object
+        var lineItemAttr = null;
+        try{
+            lineItemAttr = obj[attributes[0]];
+        } catch(e){
+            lineItemAttr = null;
+        }
+
+        // remove first element from attrArr
+        attributes.shift();
+
+        // while attribute exists in it's parent object
+        if (lineItemAttr) {
+            attributes.forEach(function (key) {
+
+                // check if object is not empty
+                if (lineItemAttr) {
+
+                    // try to retrieve object's key
+                    try {
+                        lineItemAttr = lineItemAttr[key];
+                    } catch (e) {
+                        lineItemAttr = null;
+                    }
+
+                }
+            });
+        }
+        if(lineItemAttr instanceof dw.value.Money){
+            lineItemAttr = lineItemAttr.getValueOrNull() || '0';
+        }
+        return lineItemAttr || '';
+    };
+
+    /**
+     * Returns link to PDP
+     * @param product
+     * @returns {*}
+     */
+    this.returnProductURL = function ( product ) {
+        if (!empty(product)) {
+            var pid = null,
+                cgid = null;
+            if (product instanceof order.ProductLineItem) {
+                pid = product.productID;
+                cgid = product.categoryID;
+            } else {
+                var firstCategoryID = !empty(product.allCategories) ? product.allCategories[0].getID() : null,
+                    primaryCategoryID = !empty(product.primaryCategory) ? product.primaryCategory.getID() : null,
+                    classificationCategoryID = !empty(product.classificationCategory) ? product.classificationCategory.getID() : null;
+                cgid = primaryCategoryID || classificationCategoryID || firstCategoryID;
+                pid = product.ID;
+            }
+            if (cgid) {
+                return web.URLUtils.http("Product-Show", "pid", pid, "cgid", cgid);
+            } else {
+                return web.URLUtils.http("Product-Show", "pid", pid);
+            }
+        }
+    };
+
+    /**
+     * Returns product rebate
+     * @param product
+     * @returns {dw.value.Money}
+     */
+    this.returnProductRebate = function (product) {
+        var currencyCode = dw.system.Site.current.defaultCurrency;
+        var rebate = new dw.value.Money(0, currencyCode);
+        if (!empty(product)) {
+            var quantity = product.quantityValue,
+                adjustedPrice = product.adjustedPrice.divide(quantity),
+                basePrice = product.basePrice;
+            currencyCode = product.price.currencyCode;
+            rebate = new dw.value.Money(0, currencyCode);
+            if (basePrice.subtract(adjustedPrice).value > 0) {
+                rebate = basePrice.subtract(adjustedPrice);
+                rebate = rebate.multiply(quantity);
+            }
+        }
+
+        return rebate.getValueOrNull();
+    };
+
+    this.returnOrderRebate = function (order) {
+        var currencyCode = dw.system.Site.current.defaultCurrency;
+        var rebate = new dw.value.Money(0, currencyCode);
+        if (!empty(order)) {
+            var shippingMethod = order.shipments[0].getShippingMethod(),
+                shippingModel = dw.order.ShippingMgr.getShipmentShippingModel(order.shipments[0]),
+                shippingCost = shippingModel.getShippingCost(shippingMethod).amount;
+
+            currencyCode = order.currencyCode;
+            rebate = new dw.value.Money(0, currencyCode);
+
+            //order level rebate
+            if (order.priceAdjustments.length > 0) {
+                for (var i = 0; i < order.priceAdjustments.length; i++) {
+                    var basePrice = order.priceAdjustments[i].basePrice;
+                    rebate = rebate.add(basePrice.multiply(-1));
+                }
+            }
+
+            //product level rebate
+            var productLineItems = order.shipments[0].productLineItems;
+            for (var i = 0; i < productLineItems.length; i++) {
+                rebate = rebate.add(this.returnProductRebate(productLineItems[i]));
+            }
+
+            //shipping level rebate
+            if (order.shipments[0].shippingTotalTax.value == 0 && shippingCost != order.shipments[0].shippingTotalTax.value) {
+                rebate = rebate.add(shippingCost.amount);
+            }
+        }
+
+        return rebate;
+    };
+
+    this.putDataToSFTP = function (exportFile, destinationFolder, fileName) {
+        var connected = false;
+
+        var host = dw.system.Site.current.preferences.custom.emarsysSFTPHost,
+            user = dw.system.Site.current.preferences.custom.emarsysSFTPUsername,
+            pass = dw.system.Site.current.preferences.custom.emarsysSFTPPassword;
+
+        var sftp = new sftpClient();
+        sftp.setTimeout(30000); // 30 seconds
+        sftp.connect(host, user, pass);
+
+        connected = sftp.connected;
+
+        if (connected) {
+            if (destinationFolder) {
+                var info = sftp.getFileInfo(destinationFolder);
+                if (!info.directory) {
+                    sftp.mkdir(destinationFolder);
+                }
+                var path = destinationFolder + "/" + fileName;
+            } else {
+                var path = "/" + fileName;
+            }
+            sftp.putBinary(path, exportFile);
+            sftp.disconnect();
+        }
+    };
+    
+    this.createSmartInsightFeedName = function () {
+        var today = new Date(),
+            currentDate = util.StringUtils.formatCalendar(util.Calendar(today), "YYYYMMdd_HMMss"),
+            siteID = dw.system.Site.current.ID;
+
+        var name = "sales_items_" + currentDate + "_" + siteID + ".csv";
+        return name;
+    };
+    
+    this.createSmartInsightExportFile = function () {
+        var today = new Date(),
+            currentDate = util.StringUtils.formatCalendar(util.Calendar(today), "YYYYMMdd_HMMss"),
+            siteID = system.Site.current.getID(),
+            exportFolderPath = io.File.IMPEX + "/src/" + system.Site.getCurrent().getCustomPreferenceValue("emarsysSmartInsightIMPEXFolder"),
+            exportFolder = new io.File(exportFolderPath);
+        
+        if (!exportFolder.exists()) {
+            exportFolder.mkdirs();
+        }
+
+        return new io.File(exportFolder.fullPath + io.File.SEPARATOR + "sales_items_" + currentDate + "_" + siteID + ".csv");
+    };
+
+    this.addSourceIdToRequest = function(object) {
+        var source_id = dw.system.Site.current.preferences.custom.emarsysSourceID;
+        if (source_id) {
+            object.source_id = source_id;
+        }
+    };
+
+    this.formatDate = function (date, dateDelimeter, timeDelimeter) {
+        dateDelimeter = dateDelimeter ? dateDelimeter : '';
+        timeDelimeter = timeDelimeter ? timeDelimeter : '';
+
+        var day = ( date.getDate() > 9 ? '' : '0' ) + date.getDate(),
+            month = ( date.getMonth() + 1 > 9 ? '' : '0' ) + (date.getMonth() + 1),
+            year = ( date.getFullYear() > 9 ? '' : '0' ) + date.getFullYear(),
+            hours = ( date.getHours() > 9 ? '' : '0' ) + date.getHours(),
+            minutes = ( date.getMinutes() > 9 ? '' : '0' ) + date.getMinutes(),
+            seconds = ( date.getSeconds() > 9 ? '' : '0') + date.getSeconds();
+
+        var firstHalf = [year, month, day].join(dateDelimeter),
+            secondHalf = [hours, minutes, seconds].join(timeDelimeter);
+
+        var dateGlue = '';
+        if (dateDelimeter && dateDelimeter) {
+            dateGlue = ' ';
+        }
+
+        return [firstHalf, secondHalf].join(dateGlue);
+
+    }
+
+}
+
+module.exports = EmarsysHelper;

@@ -1,0 +1,117 @@
+/**
+* The script for handling order confirmation emails
+*   @input Order : Object;
+*
+*/
+var system = require('dw/system'),
+    util   = require('dw/util'),
+    web    = require('dw/web'),
+    obj    = require('dw/object'),
+    svc    = require('dw/svc'),
+    net    = require('dw/net'),
+    io     = require('dw/io'),
+    crypto = require('dw/crypto'),
+    order  = require('dw/order'),
+    customer = require('dw/customer'),
+    value = require('dw/value'),
+    catalog = require('dw/catalog');
+
+function execute( args : PipelineDictionary ) : Number {
+
+    var emarsysHelper : Object = new (require("./../util/EmarsysHelper"))(),
+        order : Object = args.Order,
+        config : obj.CustomObject = obj.CustomObjectMgr.getCustomObject("EmarsysTransactionalEmailsConfig", "orderconf"),
+        countryCodes = system.Site.getCurrent().getCustomPreferenceValue("emarsysCountryCodes"),
+        contactHTTPRequest = "PUT", //defaults to update
+        gender = 0,
+        birthday = null,
+        sendData = {};
+
+    try {
+
+        // mark the order for Emarsys shipping transactional emails
+        order.custom.sendEmarsysShippingEmail = true;
+
+        //If we can get the order on the configuration, start to process the e-mail
+        if(!empty(order) && !empty(config)) {
+
+            //is our customer a registered user or a guest? (needed to retrieve gender information)
+            if(!empty(order.customer.profile)) {
+                birthday = order.customer.profile.birthday;
+                gender = order.customer.profile.gender.value;
+            }
+
+            //parse country codes
+            if(!empty(countryCodes)) {
+                countryCodes = JSON.parse(countryCodes);
+            }
+
+            sendData.key_id = "3"; //search by e-mail
+            sendData.external_id = order.customerEmail; //add customer e-mail
+            sendData.data = {}; //object for storing mapped fields
+
+            //store external event
+            var externalEvent = config.custom.externalEvent;
+
+            //check to see it the contact exists
+            //ECS-24 - this call is not required
+            //var checkContact = emarsysHelper.triggerAPICall("emarsys.api", "contact/query/return=" + sendData.key_id + "&" + sendData.key_id + "=1" + escape(sendData.external_id), null, "GET");
+
+            /*
+            *System field IDs reference
+            *http://documentation.emarsys.com/resource/b2c-cloud/contacts/fields/system-fields/
+            */
+            var contactData : Object = {
+                "key_id" : 3, //search by e-mail
+                "3" : order.customerEmail, //customer e-mail address
+            };
+
+            // if source id value exists add it to request
+            emarsysHelper.addSourceIdToRequest(contactData);
+
+            // define an object to store data retrieved from order.billingAddress object
+            var map = new Object();
+            // add data map object
+            emarsysHelper.addDataToMap(order.billingAddress, map);
+            // add data to request body
+            emarsysHelper.addFields(map, contactData);
+
+            //ECS-24 - this is not required
+            //if(!checkContact.ok) {
+              //  contactHTTPRequest = "POST"; //we will create the contact because it seems it doesn't exist
+            //}
+
+            //Send request to Emarsys;
+            //ECS-24 - will create an account if doesn't exist, otherwise update the existing one.
+            var Contact = emarsysHelper.triggerAPICall("emarsys.api", "contact/?create_if_not_exists=1", contactData, contactHTTPRequest);
+
+            //We couldn't create/update the contact, log the event
+            if(!Contact.ok) {
+                system.Logger.error("[OrderConfirmationEmail.ds] - ***Emarsys order confirmation email error message: Couldn't update/create contact for email: " + order.customerEmail + ", HTTP request (PUT is for updating): " + contactHTTPRequest);
+            }
+
+            //populate placeholders with values
+            var mappedFields : Object = JSON.parse(config.custom.mappedFields);
+            sendData.data.global = {};
+            emarsysHelper.appendGlobalMappedFieldsObject(mappedFields, sendData.data.global, order);
+
+            //Add products
+            sendData.data.products = [];
+            emarsysHelper.appendProductInfo(mappedFields, order, sendData.data.products);
+
+            //Triggering the event
+            var triggerEvent = emarsysHelper.triggerAPICall("emarsys.api", "event/" + externalEvent + "/trigger", sendData, "POST");
+
+            //External event triggering failed
+            if(!triggerEvent.ok) {
+                system.Logger.warn('OrderConfirmationEmail.ds - Emarsys order confirmation email message: Could not trigger the external event - externalEvent: {0} - sendData: {1} - serverMessage: {2}', externalEvent, JSON.stringify(sendData), triggerEvent.errorMessage);
+            }
+        }
+
+    } catch (err) {
+        system.Logger.error("[OrderConfirmationEmail.ds #" + err.lineNumber + "] - ***Emarsys order confirmation email error message: " + err);
+        return PIPELET_ERROR;
+    }
+
+    return PIPELET_NEXT;
+}

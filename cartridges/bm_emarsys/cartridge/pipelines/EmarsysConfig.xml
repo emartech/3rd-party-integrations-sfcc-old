@@ -1,0 +1,829 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?demandware-pipeline version="2.0"?>
+
+<pipeline type="view">
+  <branch basename="_ANONYMOUS_BRANCH_1">
+    <segment>
+      <node>
+        <text-node>
+          <description>Handles subscription settings</description>
+        </text-node>
+        <node-display x="2" y="0"/>
+      </node>
+    </segment>
+  </branch>
+  <branch basename="Subscription">
+    <segment>
+      <node>
+        <start-node name="Subscription" secure="false"/>
+        <node-display x="2" y="1"/>
+      </node>
+      <simple-transition/>
+      <node>
+        <pipelet-node pipelet-name="Assign" pipelet-set-identifier="bc_api">
+          <config-property key="Transactional" value="false"/>
+          <key-binding alias="CurrentHttpParameterMap.mainmenuname.value" key="From_0"/>
+          <key-binding alias="mainmenuname" key="To_0"/>
+          <key-binding alias="CurrentHttpParameterMap.CurrentMenuItemId.value" key="From_1"/>
+          <key-binding alias="CurrentMenuItemId" key="To_1"/>
+          <key-binding alias="null" key="From_2"/>
+          <key-binding alias="null" key="To_2"/>
+          <key-binding alias="null" key="From_3"/>
+          <key-binding alias="null" key="To_3"/>
+          <key-binding alias="null" key="From_4"/>
+          <key-binding alias="null" key="To_4"/>
+          <key-binding alias="null" key="From_5"/>
+          <key-binding alias="null" key="To_5"/>
+          <key-binding alias="null" key="From_6"/>
+          <key-binding alias="null" key="To_6"/>
+          <key-binding alias="null" key="From_7"/>
+          <key-binding alias="null" key="To_7"/>
+          <key-binding alias="null" key="From_8"/>
+          <key-binding alias="null" key="To_8"/>
+          <key-binding alias="null" key="From_9"/>
+          <key-binding alias="null" key="To_9"/>
+        </pipelet-node>
+        <node-display x="0" y="1"/>
+      </node>
+      <simple-transition/>
+      <node>
+        <pipelet-node pipelet-name="ClearFormElement" pipelet-set-identifier="bc_api">
+          <key-binding alias="CurrentForms.subscriptions_config_footer" key="FormElement"/>
+        </pipelet-node>
+        <node-display x="0" y="1"/>
+      </node>
+      <simple-transition/>
+      <node>
+        <pipelet-node pipelet-name="ClearFormElement" pipelet-set-identifier="bc_api">
+          <key-binding alias="CurrentForms.subscriptions_config_checkout" key="FormElement"/>
+        </pipelet-node>
+        <node-display x="0" y="1"/>
+      </node>
+      <simple-transition/>
+      <node>
+        <pipelet-node pipelet-name="ClearFormElement" pipelet-set-identifier="bc_api">
+          <key-binding alias="CurrentForms.subscriptions_config_account" key="FormElement"/>
+        </pipelet-node>
+        <node-display x="0" y="1"/>
+      </node>
+      <simple-transition/>
+      <node>
+        <pipelet-node pipelet-name="Script" pipelet-set-identifier="bc_api">
+          <config-property key="Transactional" value="true"/>
+          <config-property key="OnError" value="PIPELET_ERROR"/>
+          <config-property key="ScriptFile" value="extensions/NewsletterSubscription.ds"/>
+          <key-binding alias="Log" key="ScriptLog"/>
+          <key-binding alias="PageMenu" key="PageMenu"/>
+          <key-binding alias="CurrentHttpParameterMap.tab.stringValue" key="CurrentTab"/>
+          <key-binding alias="AvailableEvents" key="AvailableEvents"/>
+          <key-binding alias="StoredConfiguration" key="StoredConfiguration"/>
+          <key-binding alias="Errors" key="Errors"/>
+          <key-binding alias="CurrentMenuItemId" key="CurrentMenuItemId"/>
+          <key-binding alias="InputTab" key="InputTab"/>
+        </pipelet-node>
+        <node-display x="0" y="1"/>
+        <branch basename="b2" source-connector="error">
+          <transition target-connector="in">
+            <transition-display>
+              <bend-point relative-to="target" x="-1" y="0"/>
+            </transition-display>
+          </transition>
+          <segment>
+            <node>
+              <end-node name="error"/>
+              <node-display orientation="horizontal" x="2" y="0"/>
+            </node>
+          </segment>
+        </branch>
+      </node>
+      <transition target-connector="in1" target-path="./+1"/>
+    </segment>
+    <segment>
+      <node>
+        <join-node/>
+        <node-display x="0" y="1"/>
+      </node>
+      <simple-transition/>
+      <node>
+        <interaction-continue-node secure="false" start-name="NewsletterConfiguration" transaction-required="false">
+          <template buffered="true" dynamic="false" name="newsletter_configuration"/>
+        </interaction-continue-node>
+        <node-display x="0" y="1"/>
+        <branch basename="b2" source-connector="config_account">
+          <transition target-connector="in1">
+            <transition-display>
+              <bend-point relative-to="source" x="1" y="2"/>
+              <bend-point relative-to="target" x="1" y="0"/>
+            </transition-display>
+          </transition>
+          <segment>
+            <node>
+              <join-node/>
+              <node-display x="0" y="2"/>
+            </node>
+            <simple-transition/>
+            <node>
+              <pipelet-node pipelet-name="Script" pipelet-set-identifier="bc_api">
+                <config-property key="Transactional" value="true"/>
+                <config-property key="OnError" value="PIPELET_ERROR"/>
+                <config-property key="ScriptFile" value="extensions/SaveNewletterConfig.ds"/>
+                <key-binding alias="Log" key="ScriptLog"/>
+                <key-binding alias="CurrentRequest.triggeredForm" key="Config"/>
+                <key-binding alias="Success" key="Success"/>
+                <key-binding alias="InputTab" key="Tab"/>
+              </pipelet-node>
+              <node-display x="0" y="1"/>
+              <branch basename="b2" source-connector="error">
+                <transition target-connector="in1"/>
+                <segment>
+                  <node>
+                    <join-node/>
+                    <node-display x="2" y="0"/>
+                  </node>
+                  <transition target-connector="in1" target-path="../..">
+                    <transition-display>
+                      <bend-point relative-to="target" x="4" y="0"/>
+                    </transition-display>
+                  </transition>
+                </segment>
+              </branch>
+            </node>
+            <simple-transition/>
+            <node>
+              <jump-node start-name-ref="EmarsysConfig-Subscription"/>
+              <node-display x="0" y="2"/>
+            </node>
+          </segment>
+        </branch>
+        <branch basename="b3" source-connector="config_checkout">
+          <transition target-connector="in1" target-path="./b2.1">
+            <transition-display>
+              <bend-point relative-to="source" x="-1" y="2"/>
+              <bend-point relative-to="target" x="-1" y="0"/>
+            </transition-display>
+          </transition>
+        </branch>
+        <branch basename="b4" source-connector="config_footer">
+          <transition target-connector="in1" target-path="./b2.1"/>
+        </branch>
+      </node>
+      <transition target-connector="in1" target-path="./+1"/>
+    </segment>
+    <segment>
+      <node>
+        <join-node/>
+        <node-display x="-1" y="-1"/>
+      </node>
+      <transition target-connector="in1" target-path="./-1"/>
+    </segment>
+  </branch>
+  <branch basename="_ANONYMOUS_BRANCH_3">
+    <segment>
+      <node>
+        <text-node>
+          <description>Order confirmation emails configuration</description>
+        </text-node>
+        <node-display x="7" y="0"/>
+      </node>
+    </segment>
+  </branch>
+  <branch basename="OrderConfirmation">
+    <segment>
+      <node>
+        <start-node name="OrderConfirmation" secure="false"/>
+        <node-display x="7" y="1"/>
+      </node>
+      <simple-transition/>
+      <node>
+        <pipelet-node pipelet-name="Script" pipelet-set-identifier="bc_api">
+          <config-property key="Transactional" value="true"/>
+          <config-property key="OnError" value="PIPELET_ERROR"/>
+          <config-property key="ScriptFile" value="extensions/OrderConfirmationConfig.ds"/>
+          <key-binding alias="Log" key="ScriptLog"/>
+          <key-binding alias="AvailableEvents" key="AvailableEvents"/>
+          <key-binding alias="Errors" key="Errors"/>
+          <key-binding alias="StoredConfiguration" key="StoredConfiguration"/>
+          <key-binding alias="CurrentRequest.triggeredForm" key="Data"/>
+          <key-binding alias="CurrentHttpParameterMap.dwfrm_emails__orderconfirmation_mappedField.values" key="BatchElements"/>
+          <key-binding alias="CurrentHttpParameterMap.dwfrm_emails__orderconfirmation_placeholder.values" key="BatchPlaceholders"/>
+          <key-binding alias="CurrentHttpParameterMap.dwfrm_emails__orderconfirmation_removeField.values" key="BatchRemove"/>
+          <key-binding alias="AvailableElements" key="AvailableElements"/>
+          <key-binding alias="Success" key="Success"/>
+          <key-binding alias="AvailableElementsJSON" key="AvailableElementsJSON"/>
+          <key-binding alias="CustomError" key="CustomError"/>
+          <key-binding alias="AvailableElementsCount" key="AvailableElementsCount"/>
+        </pipelet-node>
+        <node-display x="0" y="1"/>
+        <branch basename="b2" source-connector="error">
+          <transition target-connector="in1">
+            <transition-display>
+              <bend-point relative-to="source" x="1" y="0"/>
+            </transition-display>
+          </transition>
+          <segment>
+            <node>
+              <join-node/>
+              <node-display x="1" y="0"/>
+            </node>
+            <simple-transition>
+              <transition-display>
+                <bend-point relative-to="source" x="1" y="0"/>
+              </transition-display>
+            </simple-transition>
+            <node>
+              <end-node name="error"/>
+              <node-display orientation="horizontal" x="1" y="0"/>
+            </node>
+          </segment>
+        </branch>
+      </node>
+      <transition target-connector="in1" target-path="./+1"/>
+    </segment>
+    <segment>
+      <node>
+        <join-node/>
+        <node-display x="0" y="1"/>
+      </node>
+      <simple-transition/>
+      <node>
+        <interaction-continue-node secure="false" start-name="OrderConfirmationConfig" transaction-required="false">
+          <template buffered="true" dynamic="false" name="emails_orderconfirmation"/>
+        </interaction-continue-node>
+        <node-display x="0" y="1"/>
+        <branch basename="b2" source-connector="emails_orderconf">
+          <transition target-connector="in">
+            <transition-display>
+              <bend-point relative-to="source" x="0" y="1"/>
+            </transition-display>
+          </transition>
+          <segment>
+            <node>
+              <jump-node start-name-ref="EmarsysConfig-OrderConfirmation"/>
+              <node-display x="0" y="1"/>
+            </node>
+          </segment>
+        </branch>
+      </node>
+      <transition target-connector="in1" target-path="./+1"/>
+    </segment>
+    <segment>
+      <node>
+        <join-node/>
+        <node-display x="-1" y="-1"/>
+      </node>
+      <transition target-connector="in1" target-path="./-1"/>
+    </segment>
+  </branch>
+  <branch basename="_ANONYMOUS_BRANCH_5">
+    <segment>
+      <node>
+        <text-node>
+          <description>Set-up Emarsys Predict configuration</description>
+        </text-node>
+        <node-display x="13" y="0"/>
+      </node>
+    </segment>
+  </branch>
+  <branch basename="Predict">
+    <segment>
+      <node>
+        <start-node name="Predict" secure="false"/>
+        <node-display x="13" y="1"/>
+      </node>
+      <simple-transition/>
+      <node>
+        <pipelet-node pipelet-name="Assign" pipelet-set-identifier="bc_api">
+          <config-property key="Transactional" value="false"/>
+          <key-binding alias="CurrentHttpParameterMap.mainmenuname.value" key="From_0"/>
+          <key-binding alias="mainmenuname" key="To_0"/>
+          <key-binding alias="CurrentHttpParameterMap.CurrentMenuItemId.value" key="From_1"/>
+          <key-binding alias="CurrentMenuItemId" key="To_1"/>
+          <key-binding alias="null" key="From_2"/>
+          <key-binding alias="null" key="To_2"/>
+          <key-binding alias="null" key="From_3"/>
+          <key-binding alias="null" key="To_3"/>
+          <key-binding alias="null" key="From_4"/>
+          <key-binding alias="null" key="To_4"/>
+          <key-binding alias="null" key="From_5"/>
+          <key-binding alias="null" key="To_5"/>
+          <key-binding alias="null" key="From_6"/>
+          <key-binding alias="null" key="To_6"/>
+          <key-binding alias="null" key="From_7"/>
+          <key-binding alias="null" key="To_7"/>
+          <key-binding alias="null" key="From_8"/>
+          <key-binding alias="null" key="To_8"/>
+          <key-binding alias="null" key="From_9"/>
+          <key-binding alias="null" key="To_9"/>
+        </pipelet-node>
+        <node-display x="0" y="1"/>
+      </node>
+      <simple-transition/>
+      <node>
+        <pipelet-node pipelet-name="Script" pipelet-set-identifier="bc_api">
+          <config-property key="Transactional" value="true"/>
+          <config-property key="OnError" value="PIPELET_ERROR"/>
+          <config-property key="ScriptFile" value="extensions/PredictConfig.ds"/>
+          <key-binding alias="Log" key="ScriptLog"/>
+          <key-binding alias="AvailableElementsJSON" key="AvailableElementsJSON"/>
+          <key-binding alias="AvailableElementsCount" key="AvailableElementsCount"/>
+          <key-binding alias="AvailableEvents" key="AvailableEvents"/>
+          <key-binding alias="CustomError" key="CustomError"/>
+          <key-binding alias="Errors" key="Errors"/>
+          <key-binding alias="StoredConfiguration" key="StoredConfiguration"/>
+          <key-binding alias="Success" key="Success"/>
+          <key-binding alias="CurrentRequest.triggeredForm" key="Data"/>
+          <key-binding alias="CurrentHttpParameterMap.dwfrm_predict__config_mappedField.values" key="BatchElements"/>
+          <key-binding alias="CurrentHttpParameterMap.dwfrm_predict__config_placeholder.values" key="BatchPlaceholders"/>
+          <key-binding alias="CurrentHttpParameterMap.dwfrm_predict__config_removeField.values" key="BatchRemove"/>
+          <key-binding alias="AvailableElements" key="AvailableElements"/>
+        </pipelet-node>
+        <node-display x="0" y="1"/>
+        <branch basename="b2" source-connector="error">
+          <transition target-connector="in">
+            <transition-display>
+              <bend-point relative-to="target" x="-1" y="0"/>
+            </transition-display>
+          </transition>
+          <segment>
+            <node>
+              <end-node/>
+              <node-display orientation="horizontal" x="2" y="0"/>
+            </node>
+          </segment>
+        </branch>
+      </node>
+      <transition target-connector="in1" target-path="./+1"/>
+    </segment>
+    <segment>
+      <node>
+        <join-node/>
+        <node-display x="0" y="1"/>
+      </node>
+      <simple-transition/>
+      <node>
+        <interaction-continue-node secure="false" start-name="PredictUpdate" transaction-required="false">
+          <template buffered="true" dynamic="false" name="emarsyspredict"/>
+        </interaction-continue-node>
+        <node-display x="0" y="1"/>
+        <branch basename="b2" source-connector="predict_update">
+          <transition target-connector="in">
+            <transition-display>
+              <bend-point relative-to="target" x="0" y="-1"/>
+            </transition-display>
+          </transition>
+          <segment>
+            <node>
+              <jump-node start-name-ref="EmarsysConfig-Predict"/>
+              <node-display x="0" y="2"/>
+            </node>
+          </segment>
+        </branch>
+      </node>
+      <transition target-connector="in1" target-path="./+1"/>
+    </segment>
+    <segment>
+      <node>
+        <join-node/>
+        <node-display x="-1" y="-1"/>
+      </node>
+      <transition target-connector="in1" target-path="./-1"/>
+    </segment>
+  </branch>
+  <branch basename="_ANONYMOUS_BRANCH_7">
+    <segment>
+      <node>
+        <text-node>
+          <description>Initial DB Load configuration</description>
+        </text-node>
+        <node-display x="19" y="0"/>
+      </node>
+    </segment>
+  </branch>
+  <branch basename="DBLoad">
+    <segment>
+      <node>
+        <start-node name="DBLoad" secure="false"/>
+        <node-display x="19" y="1"/>
+      </node>
+      <simple-transition/>
+      <node>
+        <pipelet-node pipelet-name="Assign" pipelet-set-identifier="bc_api">
+          <config-property key="Transactional" value="false"/>
+          <key-binding alias="CurrentHttpParameterMap.mainmenuname.value" key="From_0"/>
+          <key-binding alias="mainmenuname" key="To_0"/>
+          <key-binding alias="CurrentHttpParameterMap.CurrentMenuItemId.value" key="From_1"/>
+          <key-binding alias="CurrentMenuItemId" key="To_1"/>
+          <key-binding alias="null" key="From_2"/>
+          <key-binding alias="null" key="To_2"/>
+          <key-binding alias="null" key="From_3"/>
+          <key-binding alias="null" key="To_3"/>
+          <key-binding alias="null" key="From_4"/>
+          <key-binding alias="null" key="To_4"/>
+          <key-binding alias="null" key="From_5"/>
+          <key-binding alias="null" key="To_5"/>
+          <key-binding alias="null" key="From_6"/>
+          <key-binding alias="null" key="To_6"/>
+          <key-binding alias="null" key="From_7"/>
+          <key-binding alias="null" key="To_7"/>
+          <key-binding alias="null" key="From_8"/>
+          <key-binding alias="null" key="To_8"/>
+          <key-binding alias="null" key="From_9"/>
+          <key-binding alias="null" key="To_9"/>
+        </pipelet-node>
+        <node-display x="0" y="1"/>
+      </node>
+      <simple-transition/>
+      <node>
+        <pipelet-node pipelet-name="Script" pipelet-set-identifier="bc_api">
+          <config-property key="Transactional" value="true"/>
+          <config-property key="OnError" value="PIPELET_ERROR"/>
+          <config-property key="ScriptFile" value="extensions/InitialDBLoadConfig.ds"/>
+          <key-binding alias="Log" key="ScriptLog"/>
+          <key-binding alias="AvailableElementsJSON" key="AvailableElementsJSON"/>
+          <key-binding alias="AvailableElementsCount" key="AvailableElementsCount"/>
+          <key-binding alias="AvailableEvents" key="AvailableEvents"/>
+          <key-binding alias="CustomError" key="CustomError"/>
+          <key-binding alias="Errors" key="Errors"/>
+          <key-binding alias="StoredConfiguration" key="StoredConfiguration"/>
+          <key-binding alias="Success" key="Success"/>
+          <key-binding alias="CurrentRequest.triggeredForm" key="Data"/>
+          <key-binding alias="CurrentHttpParameterMap.dwfrm_dbload__config_mappedField.values" key="BatchElements"/>
+          <key-binding alias="CurrentHttpParameterMap.dwfrm_dbload__config_placeholder.values" key="BatchPlaceholders"/>
+          <key-binding alias="CurrentHttpParameterMap.dwfrm_dbload__config_removeField.values" key="BatchRemove"/>
+          <key-binding alias="AvailableElements" key="AvailableElements"/>
+          <key-binding alias="AvailableFields" key="AvailableFields"/>
+          <key-binding alias="AvailableAttributes" key="AvailableAttributes"/>
+          <key-binding alias="AvailableAttributesJSON" key="AvailableAttributesJSON"/>
+          <key-binding alias="AvailableFieldsNames" key="AvailableFieldsNames"/>
+        </pipelet-node>
+        <node-display x="0" y="1"/>
+        <branch basename="b2" source-connector="error">
+          <transition target-connector="in">
+            <transition-display>
+              <bend-point relative-to="target" x="-1" y="0"/>
+            </transition-display>
+          </transition>
+          <segment>
+            <node>
+              <end-node/>
+              <node-display orientation="horizontal" x="2" y="0"/>
+            </node>
+          </segment>
+        </branch>
+      </node>
+      <transition target-connector="in1" target-path="./+1"/>
+    </segment>
+    <segment>
+      <node>
+        <join-node/>
+        <node-display x="0" y="1"/>
+      </node>
+      <simple-transition/>
+      <node>
+        <interaction-continue-node secure="false" start-name="DBLoadUpdate" transaction-required="false">
+          <template buffered="true" dynamic="false" name="dbload_configuration"/>
+        </interaction-continue-node>
+        <node-display x="0" y="1"/>
+        <branch basename="b2" source-connector="dbload_update">
+          <transition target-connector="in">
+            <transition-display>
+              <bend-point relative-to="target" x="0" y="-1"/>
+            </transition-display>
+          </transition>
+          <segment>
+            <node>
+              <jump-node start-name-ref="EmarsysConfig-DBLoad"/>
+              <node-display x="0" y="2"/>
+            </node>
+          </segment>
+        </branch>
+      </node>
+      <transition target-connector="in1" target-path="./+1"/>
+    </segment>
+    <segment>
+      <node>
+        <join-node/>
+        <node-display x="-1" y="-1"/>
+      </node>
+      <transition target-connector="in1" target-path="./-1"/>
+    </segment>
+  </branch>
+  <branch basename="_ANONYMOUS_BRANCH_9">
+    <segment>
+      <node>
+        <text-node>
+          <description>Pipeline renders a form for shipping emails data configuration and save it's data once the form is submitted</description>
+        </text-node>
+        <node-display width="2" x="2" y="16"/>
+      </node>
+    </segment>
+  </branch>
+  <branch basename="ShippingConfirmation">
+    <segment>
+      <node>
+        <start-node name="ShippingConfirmation" secure="false"/>
+        <node-display x="2" y="17"/>
+      </node>
+      <simple-transition>
+        <transition-display>
+          <bend-point relative-to="source" x="0" y="1"/>
+        </transition-display>
+      </simple-transition>
+      <node>
+        <pipelet-node pipelet-name="ClearFormElement" pipelet-set-identifier="bc_api">
+          <key-binding alias="CurrentForms.emails_shippingconfirmation" key="FormElement"/>
+        </pipelet-node>
+        <node-display x="0" y="1"/>
+      </node>
+      <simple-transition/>
+      <node>
+        <pipelet-node pipelet-name="Script" pipelet-set-identifier="bc_api">
+          <config-property key="Transactional" value="false"/>
+          <config-property key="OnError" value="PIPELET_ERROR"/>
+          <config-property key="ScriptFile" value="GetAvailableElements.ds"/>
+          <key-binding alias="AvailableElementsLog" key="ScriptLog"/>
+          <key-binding alias="AvailableElements" key="AvailableElementsList"/>
+          <key-binding alias="AvailableElementsJSON" key="AvailableElementsJSON"/>
+          <key-binding alias="Errors" key="Errors"/>
+          <key-binding alias="Success" key="Success"/>
+          <key-binding alias="AvailableElementsCount" key="AvailableElementsCount"/>
+        </pipelet-node>
+        <node-display x="0" y="1"/>
+        <branch basename="b2" source-connector="error">
+          <transition target-connector="in1"/>
+          <segment>
+            <node>
+              <join-node/>
+              <node-display x="1" y="0"/>
+            </node>
+            <transition target-connector="in1" target-path="../b3.1"/>
+          </segment>
+        </branch>
+      </node>
+      <simple-transition/>
+      <node>
+        <pipelet-node pipelet-name="Script" pipelet-set-identifier="bc_api">
+          <config-property key="Transactional" value="false"/>
+          <config-property key="OnError" value="PIPELET_ERROR"/>
+          <config-property key="ScriptFile" value="extensions/GetShippingConfigData.ds"/>
+          <key-binding alias="Log" key="ScriptLog"/>
+          <key-binding alias="Errors" key="Errors"/>
+          <key-binding alias="SavedElementsList" key="SavedElementsList"/>
+          <key-binding alias="SavedEvent" key="SavedEvent"/>
+          <key-binding alias="SavedFieldsObj" key="SavedFieldsObj"/>
+          <key-binding alias="Success" key="Success"/>
+          <key-binding alias="StoredConfiguration" key="StoredConfiguration"/>
+        </pipelet-node>
+        <node-display x="0" y="1"/>
+        <branch basename="b3" source-connector="error">
+          <transition target-connector="in1"/>
+          <segment>
+            <node>
+              <join-node/>
+              <node-display x="1" y="0"/>
+            </node>
+            <transition target-connector="in1" target-path="../b4.1"/>
+          </segment>
+        </branch>
+      </node>
+      <simple-transition/>
+      <node>
+        <pipelet-node pipelet-name="Script" pipelet-set-identifier="bc_api">
+          <config-property key="Transactional" value="false"/>
+          <config-property key="OnError" value="PIPELET_ERROR"/>
+          <config-property key="ScriptFile" value="GetExternaEvents.ds"/>
+          <key-binding alias="ExternalEventsLog" key="ScriptLog"/>
+          <key-binding alias="Errors" key="Errors"/>
+          <key-binding alias="AvailableEvents" key="Events"/>
+          <key-binding alias="Success" key="Success"/>
+        </pipelet-node>
+        <node-display x="0" y="1"/>
+        <branch basename="b4" source-connector="error">
+          <transition target-connector="in1"/>
+          <segment>
+            <node>
+              <join-node/>
+              <node-display x="1" y="0"/>
+            </node>
+            <transition target-connector="in1" target-path="../+1">
+              <transition-display>
+                <bend-point relative-to="source" x="0" y="2"/>
+              </transition-display>
+            </transition>
+          </segment>
+        </branch>
+      </node>
+      <transition target-connector="in1" target-path="./+1"/>
+    </segment>
+    <segment>
+      <node>
+        <join-node/>
+        <node-display x="0" y="1"/>
+      </node>
+      <simple-transition>
+        <transition-display>
+          <bend-point relative-to="source" x="0" y="1"/>
+        </transition-display>
+      </simple-transition>
+      <node>
+        <interaction-continue-node secure="false" start-name="Save" transaction-required="false">
+          <template buffered="true" dynamic="false" name="emails_shippingconfirmation"/>
+        </interaction-continue-node>
+        <node-display x="0" y="1"/>
+        <branch basename="b2" source-connector="save">
+          <transition target-connector="in"/>
+          <segment>
+            <node>
+              <pipelet-node pipelet-name="Script" pipelet-set-identifier="bc_api">
+                <config-property key="Transactional" value="true"/>
+                <config-property key="OnError" value="PIPELET_ERROR"/>
+                <config-property key="ScriptFile" value="extensions/SaveShippingDataConfig.ds"/>
+                <key-binding alias="SaveDataLog" key="ScriptLog"/>
+                <key-binding alias="CurrentHttpParameterMap" key="CurrentHttpParameterMap"/>
+                <key-binding alias="Errors" key="Errors"/>
+                <key-binding alias="Success" key="Success"/>
+              </pipelet-node>
+              <node-display x="0" y="1"/>
+              <branch basename="b2" source-connector="error">
+                <transition target-connector="in1" target-path="./+1">
+                  <transition-display>
+                    <bend-point relative-to="source" x="1" y="0"/>
+                    <bend-point relative-to="target" x="1" y="0"/>
+                  </transition-display>
+                </transition>
+              </branch>
+            </node>
+            <transition target-connector="in1" target-path="./+1"/>
+          </segment>
+          <segment>
+            <node>
+              <join-node/>
+              <node-display x="0" y="1"/>
+            </node>
+            <simple-transition/>
+            <node>
+              <jump-node start-name-ref="EmarsysConfig-ShippingConfirmation"/>
+              <node-display x="0" y="1"/>
+            </node>
+          </segment>
+        </branch>
+      </node>
+      <transition target-connector="in1" target-path="./+1"/>
+    </segment>
+    <segment>
+      <node>
+        <join-node/>
+        <node-display x="-1" y="-1"/>
+      </node>
+      <transition target-connector="in1" target-path="./-1"/>
+    </segment>
+  </branch>
+  <branch basename="_ANONYMOUS_BRANCH_7">
+    <segment>
+      <node>
+        <text-node>
+          <description>Pipeline renders a form for SmartInsight data configuration and save it's data once the form is submitted</description>
+        </text-node>
+        <node-display width="2" x="7" y="14"/>
+      </node>
+    </segment>
+  </branch>
+  <branch basename="SmartInsight">
+    <segment>
+      <node>
+        <start-node name="SmartInsight" secure="false"/>
+        <node-display x="7" y="15"/>
+      </node>
+      <simple-transition>
+        <transition-display>
+          <bend-point relative-to="source" x="0" y="1"/>
+        </transition-display>
+      </simple-transition>
+      <node>
+        <pipelet-node pipelet-name="ClearFormElement" pipelet-set-identifier="bc_api">
+          <key-binding alias="CurrentForms.smartinsight_config" key="FormElement"/>
+        </pipelet-node>
+        <node-display x="0" y="1"/>
+      </node>
+      <simple-transition/>
+      <node>
+        <pipelet-node pipelet-name="Script" pipelet-set-identifier="bc_api">
+          <config-property key="Transactional" value="false"/>
+          <config-property key="OnError" value="PIPELET_ERROR"/>
+          <config-property key="ScriptFile" value="extensions/smartinsight/GetSmartInsightAvailableElements.ds"/>
+          <key-binding alias="AvailableElementsLog" key="ScriptLog"/>
+          <key-binding alias="AvailableElementsCount" key="AvailableElementsCount"/>
+          <key-binding alias="AvailableElementsJSON" key="AvailableElementsJSON"/>
+          <key-binding alias="AvailableElements" key="AvailableElementsList"/>
+          <key-binding alias="Errors" key="Errors"/>
+          <key-binding alias="Success" key="Success"/>
+        </pipelet-node>
+        <node-display x="0" y="1"/>
+        <branch basename="b2" source-connector="error">
+          <transition target-connector="in1"/>
+          <segment>
+            <node>
+              <join-node/>
+              <node-display x="1" y="0"/>
+            </node>
+            <transition target-connector="in1" target-path="../b3.1"/>
+          </segment>
+        </branch>
+      </node>
+      <simple-transition>
+        <transition-display>
+          <bend-point relative-to="source" x="0" y="1"/>
+        </transition-display>
+      </simple-transition>
+      <node>
+        <pipelet-node pipelet-name="Script" pipelet-set-identifier="bc_api">
+          <config-property key="Transactional" value="false"/>
+          <config-property key="OnError" value="PIPELET_ERROR"/>
+          <config-property key="ScriptFile" value="extensions/smartinsight/GetSmartInsightConfig.ds"/>
+          <key-binding alias="Log" key="ScriptLog"/>
+          <key-binding alias="Errors" key="Errors"/>
+          <key-binding alias="Success" key="Success"/>
+          <key-binding alias="StoredConfiguration" key="StoredConfiguration"/>
+        </pipelet-node>
+        <node-display x="0" y="1"/>
+        <branch basename="b3" source-connector="error">
+          <transition target-connector="in1"/>
+          <segment>
+            <node>
+              <join-node/>
+              <node-display x="1" y="0"/>
+            </node>
+            <transition target-connector="in1" target-path="../+1">
+              <transition-display>
+                <bend-point relative-to="source" x="0" y="2"/>
+              </transition-display>
+            </transition>
+          </segment>
+        </branch>
+      </node>
+      <transition target-connector="in1" target-path="./+1"/>
+    </segment>
+    <segment>
+      <node>
+        <join-node/>
+        <node-display x="0" y="1"/>
+      </node>
+      <simple-transition>
+        <transition-display>
+          <bend-point relative-to="source" x="0" y="1"/>
+        </transition-display>
+      </simple-transition>
+      <node>
+        <interaction-continue-node secure="false" start-name="SaveSmartInsight" transaction-required="false">
+          <template buffered="true" dynamic="false" name="extensions/smartinsight/smartinsight_config"/>
+        </interaction-continue-node>
+        <node-display x="0" y="1"/>
+        <branch basename="b2" source-connector="save">
+          <transition target-connector="in"/>
+          <segment>
+            <node>
+              <pipelet-node pipelet-name="Script" pipelet-set-identifier="bc_api">
+                <config-property key="Transactional" value="true"/>
+                <config-property key="OnError" value="PIPELET_ERROR"/>
+                <config-property key="ScriptFile" value="extensions/smartinsight/SaveSmartInsightConfig.ds"/>
+                <key-binding alias="SaveDataLog" key="ScriptLog"/>
+                <key-binding alias="CurrentHttpParameterMap" key="CurrentHttpParameterMap"/>
+                <key-binding alias="Errors" key="Errors"/>
+                <key-binding alias="Success" key="Success"/>
+              </pipelet-node>
+              <node-display x="0" y="1"/>
+              <branch basename="b2" source-connector="error">
+                <transition target-connector="in1" target-path="./+1">
+                  <transition-display>
+                    <bend-point relative-to="source" x="1" y="0"/>
+                    <bend-point relative-to="target" x="1" y="0"/>
+                  </transition-display>
+                </transition>
+              </branch>
+            </node>
+            <transition target-connector="in1" target-path="./+1"/>
+          </segment>
+          <segment>
+            <node>
+              <join-node/>
+              <node-display x="0" y="1"/>
+            </node>
+            <simple-transition/>
+            <node>
+              <jump-node start-name-ref="EmarsysConfig-SmartInsight"/>
+              <node-display x="0" y="1"/>
+            </node>
+          </segment>
+        </branch>
+      </node>
+      <transition target-connector="in1" target-path="./+1"/>
+    </segment>
+    <segment>
+      <node>
+        <join-node/>
+        <node-display x="-1" y="-1"/>
+      </node>
+      <transition target-connector="in1" target-path="./-1"/>
+    </segment>
+  </branch>
+</pipeline>

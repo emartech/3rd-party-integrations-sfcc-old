@@ -1,0 +1,69 @@
+/**
+* Demandware Script File
+* To get customer data from billingAddress/shippingAddress Basket objects if customer in the middle of checkout process
+* or from customer's profile if customer is authenticated and no data were retrieved from Basket
+*
+*
+*   @input Basket : Object
+*   @input CurrentCustomer : Object
+*   @input SubscriptionType : String
+*   @output Map : Object
+*
+*/
+
+var logger = require("dw/system/Logger");
+
+function execute( args : PipelineDictionary ) : Number
+{
+	var emarsysHelper : Object = new (require("./../util/EmarsysHelper"))();
+	
+	var customer = args.CurrentCustomer,
+		map = new Object(),
+		dataFields;	// object to read data from
+	
+	try {	
+		if (args.Basket) {
+			if (args.Basket.billingAddress) {
+				dataFields = args.Basket.billingAddress;
+			} else if (args.Basket.shipments[0].shippingAddress) {
+				dataFields = args.Basket.shipments[0].shippingAddress;
+			} 
+		}
+	    
+	    // if no billing or shipping address available get data from profile if customer authenticated
+	    if (dataFields) {
+	    	emarsysHelper.addDataToMap(dataFields, map);
+	    } else {
+	    	if (customer.authenticated) {
+	    		var customerAddressData = customer.addressBook;
+		    	if ("preferredAddress" in customerAddressData && !empty(customerAddressData.preferredAddress)) {
+		    		dataFields = customerAddressData.preferredAddress;
+		    	} else if (customerAddressData.addresses && customerAddressData.addresses.length > 0) {
+		    		dataFields = customerAddressData.addresses[0];
+		    	} else {
+		    		dataFields = customer.profile;
+		    	}
+	    	}
+	    	
+	    	if (dataFields) {
+		    	emarsysHelper.addDataToMap(dataFields, map);
+		    }
+	    }
+	    
+	    /*  If customer decides to subscribe from 'Edit Account' page
+	     	in the middle of checkout process add updated data to the map object
+	    */
+	    if (args.SubscriptionType == "account" && customer.authenticated) {
+	    	emarsysHelper.addDataToMap(customer.profile, map);
+	    }
+	    
+	    if (!empty(map)) {
+	    	args.Map = map;
+	    }
+	} catch (err) {
+		logger.error("[GetCustomerData.ds.ds #" + err.lineNumber + "] - ***Get data error: " + err);
+		return PIPELET_ERROR;
+	}
+
+    return PIPELET_NEXT;
+}

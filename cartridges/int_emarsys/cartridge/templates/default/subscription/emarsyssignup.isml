@@ -1,0 +1,27 @@
+<!--- TEMPLATENAME: subscribe.isml --->
+<iscontent type="text/html" charset="UTF-8" compact="true"/>
+<iscache type="relative" hour="24"/>
+<isinclude template="util/modules"/>
+
+<isdecorate template="content/content/pt_content">
+    <div class="email-signup-wrapper">
+        <h3>${Resource.msg('emarsys.signup','forms',null)}</h3>
+        <form action="${URLUtils.continueURL()}" method="post" name="${pdict.CurrentForms.emarsyssignup.htmlName}">
+            <fieldset>
+                <isinputfield formfield="${pdict.CurrentForms.emarsyssignup.emailAddress}" type="input"/>
+                <isinputfield formfield="${pdict.CurrentForms.emarsyssignup.firstName}" type="input"/>
+                <isinputfield formfield="${pdict.CurrentForms.emarsyssignup.lastName}" type="input"/>
+                <isinputfield formfield="${pdict.CurrentForms.emarsyssignup.address1}" type="input"/>
+                <isinputfield formfield="${pdict.CurrentForms.emarsyssignup.city}" type="input"/>
+                <isinputfield formfield="${pdict.CurrentForms.emarsyssignup.stateCode}" type="select"/>
+                <isinputfield formfield="${pdict.CurrentForms.emarsyssignup.postalCode}" type="input"/>
+                <isinputfield formfield="${pdict.CurrentForms.emarsyssignup.countryCode}" type="select"/>
+                <isinputfield formfield="${pdict.CurrentForms.emarsyssignup.gender}" type="radio"/>
+                <isinputfield formfield="${pdict.CurrentForms.emarsyssignup.phone}" type="input"/>
+                <div class="full-width">
+                    <button class="button" type="submit" name="${pdict.CurrentForms.emarsyssignup.subscribe.htmlName}" value="${Resource.msg('emarsys.signupemail','forms',null)}"><span>${Resource.msg('emarsys.signupemail','forms',null)}</span></button>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+</isdecorate>

@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<form xmlns="http://www.demandware.com/xml/form/2008-04-19">
+    <field formid="accountSubscriptionStrategy" type="string" missing-error="" mandatory="true" />
+    <field formid="accountExternalEventOptin" type="string" missing-error="" mandatory="false" />
+    <field formid="accountExternalEventOptinAfterConfirmation" type="string" missing-error="" mandatory="false" />
+    <field formid="tab" type="string"  mandatory="false" />
+    <action formid="config_account" valid-form="true" />
+</form>

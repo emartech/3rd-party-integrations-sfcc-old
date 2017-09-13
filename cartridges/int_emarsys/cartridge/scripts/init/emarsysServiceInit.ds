@@ -1,0 +1,20 @@
+/**
+* Initialization script for the Emarsys API services
+*/
+
+var svc = require("dw/svc"),
+	net = require("dw/net");
+
+svc.ServiceRegistry.configure("emarsys.api", {
+	
+	createRequest: function(svc : svc.HTTPService, args){
+		if(args) {
+			return JSON.stringify(args);
+		}
+	},
+	
+	parseResponse : function(svc : svc.HTTPService, response : net.HTTPClient) {
+		return response.text;
+	}
+
+});

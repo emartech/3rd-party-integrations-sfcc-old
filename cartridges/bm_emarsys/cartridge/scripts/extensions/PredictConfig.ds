@@ -1,0 +1,114 @@
+/**
+* The script for managing Emarsys Predict configuration
+*
+*   @input  Data : Object;
+*   @input  BatchElements : Object;
+*   @input  BatchPlaceholders : Object;
+*   @input  BatchRemove : Object;
+*   @output AvailableEvents : Object
+*   @output AvailableElements : Object
+*   @output AvailableElementsJSON : String
+*   @output AvailableElementsCount : Number
+*   @output StoredConfiguration : Object
+*   @output Errors : Object
+*   @output Success : Boolean
+*   @output CustomError : String;
+*/
+var system = require('dw/system'),
+    util   = require('dw/util'),
+    web    = require('dw/web'),
+    obj    = require('dw/object');
+
+function execute( args : PipelineDictionary ) : Number {
+
+    //Get configuration
+    var ProductAttrs = system.Site.getCurrent().getCustomPreferenceValue("emarsysPredictProductAttributes"),
+        config = "predictConfig",
+        PredictConfig : obj.CustomObject = obj.CustomObjectMgr.getCustomObject("EmarsysPredictConfig", config),
+        data : Object = args.Data,
+        pairedData = [],
+        selectData : Object = [],
+        mappedFields;
+
+    try {
+        //Predefined product attributes are mandatory
+        if (!empty(ProductAttrs)) {
+            args.AvailableElements = ProductAttrs;
+            for (var i = 0; i < ProductAttrs.length; i++) {
+                selectData.push({name: ProductAttrs[i]});
+            }
+            args.AvailableElementsJSON = JSON.stringify({ selectOptions : selectData });
+            args.AvailableElementsCount = ProductAttrs.length;
+        } else {
+            args.Errors = { name : web.Resource.msg("predict.noelements.error.title", "emarsyspredict", null), body : web.Resource.msg("predict.noelements.error.body", "emarsyspredict", null) };
+        }
+
+        if (!empty(PredictConfig)) {
+            args.StoredConfiguration = { exportType : PredictConfig.custom.exportType, mappedFields : JSON.parse(PredictConfig.custom.mappedFields) };
+        } else {
+            //If no settings are present, load defaults
+            var CF : obj.CustomObject = obj.CustomObjectMgr.createCustomObject("EmarsysPredictConfig", config);
+            CF.custom.exportType = data.exportType.value;
+            CF.custom.mappedFields = mappedFields;
+            args.StoredConfiguration = { exportType : CF.custom.exportType, mappedFields : JSON.parse(CF.custom.mappedFields) };
+        }
+
+        //Has the form been submitted?
+        if (!empty(data)) {
+            //For multiple field values
+            if (!empty(args.BatchElements) && !empty(args.BatchPlaceholders)) {
+                var totalElements = args.BatchElements.length,
+                    totalRemovedElements = !empty(args.BatchRemove) ? args.BatchRemove.length : 0;
+
+                //Store
+                for (var i = 0; i < totalElements; i++) {
+                    var add = true;
+                    if (!empty(args.BatchRemove)) {
+                        for each (var field in args.BatchRemove) {
+                            if (field == i) {
+                                add = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (add) {
+                        pairedData.push({ field : args.BatchElements[i], placeholder : args.BatchPlaceholders[i].trim() });
+                    }
+                }
+
+                mappedFields = JSON.stringify(pairedData);
+            } else {
+                if (!empty(data.mappedField.value) && !empty(data.placeholder.value)) {
+                    mappedFields = JSON.stringify( [{ field : data.mappedField.value, placeholder : data.placeholder.value.trim() }] );
+                }
+            }
+
+            if (!empty(mappedFields) && !empty(data.exportType.value)) {
+                if (totalElements > ProductAttrs.length) {
+                    args.Success = false;
+                    args.CustomError = web.Resource.msg("predict.oversized_count.error", "emarsyspredict", null);
+                } else {
+                    //Update configuration
+                    obj.CustomObjectMgr.remove(PredictConfig);
+                    var Update : obj.CustomObject = obj.CustomObjectMgr.createCustomObject("EmarsysPredictConfig", config);
+                    Update.custom.exportType = data.exportType.value;
+                    Update.custom.mappedFields = mappedFields;
+
+                    //Output updates
+                    args.StoredConfiguration = { exportType : Update.custom.exportType, mappedFields : JSON.parse(Update.custom.mappedFields) };
+                    args.Success = true;
+                }
+            } else {
+                args.Success = false;
+                args.CustomError = web.Resource.msg("predict.missing_field_values.error", "emarsyspredict", null);
+            }
+        }
+
+    } catch (err) {
+        system.Logger.error("[PredictConfig.ds #" + err.lineNumber + "] - ***Emarsys Predict configuration error message: " + err);
+        return PIPELET_ERROR;
+    }
+
+    return PIPELET_NEXT;
+}

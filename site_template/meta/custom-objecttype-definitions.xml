@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata xmlns="http://www.demandware.com/xml/impex/metadata/2006-10-31">
+    <custom-type type-id="EmarsysExternalEvents">
+        <staging-mode>no-staging</staging-mode>
+        <storage-scope>site</storage-scope>
+        <key-definition attribute-id="externalEvents">
+            <type>string</type>
+            <min-length>0</min-length>
+        </key-definition>
+        <attribute-definitions>
+            <attribute-definition attribute-id="id">
+                <display-name xml:lang="x-default">ID</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="name">
+                <display-name xml:lang="x-default">Name</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="result">
+                <display-name xml:lang="x-default">Result</display-name>
+                <description xml:lang="x-default">Stores external events</description>
+                <type>text</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+        </attribute-definitions>
+        <group-definitions>
+            <attribute-group group-id="ExternalEvent">
+                <display-name xml:lang="x-default">External Event</display-name>
+                <attribute attribute-id="id"/>
+                <attribute attribute-id="name"/>
+                <attribute attribute-id="result"/>
+                <attribute attribute-id="externalEvents"/>
+            </attribute-group>
+        </group-definitions>
+    </custom-type>
+
+    <custom-type type-id="EmarsysNewsletterSubscription">
+        <description xml:lang="x-default">Custom object to store data for each subscription type. Stored data: optIn strategy, external event, external event after confirmation.</description>
+        <staging-mode>no-staging</staging-mode>
+        <storage-scope>site</storage-scope>
+        <key-definition attribute-id="EmarsysSubscriptionType">
+            <type>string</type>
+            <min-length>0</min-length>
+        </key-definition>
+        <attribute-definitions>
+            <attribute-definition attribute-id="optInExternalEvent">
+                <display-name xml:lang="x-default">External event triggered for Opt-in strategy</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="optInExternalEventAfterConfirmation">
+                <display-name xml:lang="x-default">External event triggered after Opt-in confirmation email</display-name>
+                <description xml:lang="x-default">This is an optional event that can be triggered when Double Opt-in strategy is used. The event will be triggered after the users clicks on the link from the confirmation email</description>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="optInStrategy">
+                <display-name xml:lang="x-default">Opt-in Strategy</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+        </attribute-definitions>
+        <group-definitions>
+            <attribute-group group-id="SubscriptionConfiguration">
+                <display-name xml:lang="x-default">SubscriptionConfiguration</display-name>
+                <attribute attribute-id="EmarsysSubscriptionType"/>
+                <attribute attribute-id="optInStrategy"/>
+                <attribute attribute-id="optInExternalEvent"/>
+                <attribute attribute-id="optInExternalEventAfterConfirmation"/>
+            </attribute-group>
+        </group-definitions>
+    </custom-type>
+	
+    <custom-type type-id="EmarsysTransactionalEmailsConfig">
+        <staging-mode>no-staging</staging-mode>
+        <storage-scope>site</storage-scope>
+        <key-definition attribute-id="EmarsysEmailTypeConfig">
+            <type>string</type>
+            <min-length>0</min-length>
+        </key-definition>
+        <attribute-definitions>
+            <attribute-definition attribute-id="externalEvent">
+                <display-name xml:lang="x-default">External event</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="mappedFields">
+                <display-name xml:lang="x-default">Mapped fileds</display-name>
+                <type>text</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+        </attribute-definitions>
+        <group-definitions>
+            <attribute-group group-id="MailsConfiguration">
+                <display-name xml:lang="x-default">Mails Confirmation Configuration</display-name>
+                <attribute attribute-id="mappedFields"/>
+                <attribute attribute-id="EmarsysEmailTypeConfig"/>
+                <attribute attribute-id="externalEvent"/>
+            </attribute-group>
+        </group-definitions>
+    </custom-type>
+
+    <custom-type type-id="EmarsysDBLoadConfig">
+        <display-name xml:lang="x-default">EmarsysDBLoadConfig</display-name>
+        <staging-mode>no-staging</staging-mode>
+        <storage-scope>site</storage-scope>
+        <key-definition attribute-id="EmarsysDBLoadConfig">
+            <type>string</type>
+            <min-length>0</min-length>
+        </key-definition>
+        <attribute-definitions>
+            <attribute-definition attribute-id="mappedFields">
+                <display-name xml:lang="x-default">Mapped fields</display-name>
+                <type>text</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+        </attribute-definitions>
+        <group-definitions>
+            <attribute-group group-id="DBLoadConfig">
+                <display-name xml:lang="x-default">Database Load Configuration</display-name>
+                <attribute attribute-id="mappedFields"/>
+                <attribute attribute-id="EmarsysDBLoadConfig"/>
+            </attribute-group>
+        </group-definitions>
+    </custom-type>
+
+    <custom-type type-id="EmarsysSmartInsightConfiguration">
+        <staging-mode>no-staging</staging-mode>
+        <storage-scope>site</storage-scope>
+        <key-definition attribute-id="SmartInsightConfig">
+            <type>string</type>
+            <min-length>0</min-length>
+        </key-definition>
+        <attribute-definitions>
+            <attribute-definition attribute-id="mappedFields">
+                <display-name xml:lang="x-default">Mapped Fields</display-name>
+                <description xml:lang="x-default">JSON object of the chosen fields and placeholders</description>
+                <type>text</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+        </attribute-definitions>
+        <group-definitions>
+            <attribute-group group-id="EmarsysSmartInsightConfiguration">
+                <display-name xml:lang="x-default">Emarsys SmartInsight Configuration</display-name>
+                <attribute attribute-id="SmartInsightConfig"/>
+                <attribute attribute-id="mappedFields"/>
+            </attribute-group>
+        </group-definitions>
+    </custom-type>
+
+    <custom-type type-id="EmarsysProfileFields">
+        <display-name xml:lang="x-default">Emarsys Profile Fields</display-name>
+        <staging-mode>no-staging</staging-mode>
+        <storage-scope>site</storage-scope>
+        <key-definition attribute-id="EmarsysProfileFields">
+            <type>string</type>
+            <min-length>0</min-length>
+        </key-definition>
+        <attribute-definitions>
+            <attribute-definition attribute-id="result">
+                <display-name xml:lang="x-default">Retrieved fields</display-name>
+                <type>text</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+        </attribute-definitions>
+        <group-definitions>
+            <attribute-group group-id="ProfileFields">
+                <display-name xml:lang="x-default">Profile Fields</display-name>
+                <attribute attribute-id="EmarsysProfileFields"/>
+                <attribute attribute-id="result"/>
+            </attribute-group>
+        </group-definitions>
+    </custom-type>
+
+    <custom-type type-id="EmarsysPredictConfig">
+        <display-name xml:lang="x-default">Emarsys Predict Condiguration</display-name>
+        <staging-mode>no-staging</staging-mode>
+        <storage-scope>site</storage-scope>
+        <key-definition attribute-id="EmarsysPredictConfig">
+            <type>string</type>
+            <min-length>0</min-length>
+        </key-definition>
+        <attribute-definitions>
+            <attribute-definition attribute-id="exportType">
+                <display-name xml:lang="x-default">Export Type</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="mappedFields">
+                <display-name xml:lang="x-default">Mapped fields</display-name>
+                <type>text</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+        </attribute-definitions>
+        <group-definitions>
+            <attribute-group group-id="PredictConfig">
+                <display-name xml:lang="x-default">Predict Configuration</display-name>
+                <attribute attribute-id="mappedFields"/>
+                <attribute attribute-id="exportType"/>
+                <attribute attribute-id="lastModified" system="true"/>
+                <attribute attribute-id="EmarsysPredictConfig"/>
+            </attribute-group>
+        </group-definitions>
+    </custom-type>
+	
+</metadata>

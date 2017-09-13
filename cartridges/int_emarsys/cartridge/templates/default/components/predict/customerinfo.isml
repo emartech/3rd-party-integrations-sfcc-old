@@ -1,0 +1,21 @@
+<isif condition="${dw.system.Site.current.getCustomPreferenceValue('emarsysPredictEnableJSTrackingCode')}" >
+    <iscomment>Information used to identify customer</iscomment>
+
+    <isif condition="${customer.authenticated && customer.registered}">
+        <isif condition="${!empty(customer.profile.email)}">
+            <script type="text/javascript">
+                ScarabQueue.push(['setEmail', '<isprint value="${customer.profile.email}" encoding="off" />']);
+            </script>
+        <iselse>
+            <script type="text/javascript">
+                ScarabQueue.push(['setCustomerId', '<isprint value="${customer.profile.customerNo}" encoding="off" />']);
+            </script>
+        </isif>
+    <iselse>
+        <isif condition="${pdict.PageContext == 'orderconfirmation'}">
+            <script type="text/javascript">
+                ScarabQueue.push(['setEmail', '<isprint value="${pdict.GuestEmail}" encoding="off" />']);
+            </script>
+        </isif>
+    </isif>
+</isif>

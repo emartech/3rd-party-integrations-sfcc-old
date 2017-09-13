@@ -1,0 +1,32 @@
+/**
+* Demandware Script File
+* to map signup form fields on emarsys codes
+*
+*
+*   @input CurrentForms : Object
+*   @output Map : Object
+*
+*/
+var util =require("dw/util");
+var logger = require("dw/system/Logger");
+
+function execute( args : PipelineDictionary ) : Number
+{
+	var emarsysHelper : Object = new (require("./../util/EmarsysHelper"))();
+	
+	var map = new Object();
+	
+	try {
+	    if (args.CurrentForms.emarsyssignup) {
+			var signupFields = args.CurrentForms.emarsyssignup;
+			emarsysHelper.addDataToMap(signupFields, map);
+		}
+	} catch (err) {
+		logger.error("[MapFieldsSignup.ds #" + err.lineNumber + "] - ***Emarsys map signup fields data error message: " + err);
+		return PIPELET_ERROR;
+	}
+	
+	args.Map = map;
+
+    return PIPELET_NEXT;
+}

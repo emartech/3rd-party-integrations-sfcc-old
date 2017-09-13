@@ -1,0 +1,10 @@
+<iscontent type="text/javascript" charset="UTF-8" compact="true"/>
+<isscript>
+	importScript("util/EmarsysResource.ds");
+</isscript>
+
+(function(){
+	window.EmarsysUrls = <isprint value="${JSON.stringify(EmarsysResourceHelper.getUrls())}" encoding="off"/>;
+	window.EmarsysResources = <isprint value="${JSON.stringify(EmarsysResourceHelper.getResources())}" encoding="off"/>;
+    window.EmarsysPreferences = <isprint value="${JSON.stringify(EmarsysResourceHelper.getPreferences())}" encoding="off"/>;
+}());

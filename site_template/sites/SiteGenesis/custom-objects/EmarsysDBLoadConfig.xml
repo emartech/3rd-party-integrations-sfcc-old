@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<custom-objects xmlns="http://www.demandware.com/xml/impex/customobject/2006-10-31">
+    <custom-object type-id="EmarsysDBLoadConfig" object-id="dbloadConfig">
+        <object-attribute attribute-id="mappedFields">[{"field":"3","placeholder":"email"},{"field":"2","placeholder":"lastName"},{"field":"1","placeholder":"firstName"},{"field":"5","placeholder":"gender"}]</object-attribute>
+    </custom-object>
+
+</custom-objects>

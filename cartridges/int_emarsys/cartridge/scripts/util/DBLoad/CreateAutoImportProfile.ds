@@ -1,0 +1,97 @@
+/**
+*	Create AutoImport Profile using the API
+*
+*	@input FileName : String
+*	@input Separator : String
+*	@input FieldValueMapping : String
+*
+*/
+var logger = require("dw/system/Logger"),
+    object = require("dw/object");
+
+function execute( args : PipelineDictionary ) : Number
+{
+
+    var emarsysHelper : Object = new (require("./../../util/EmarsysHelper"))(),
+        request : Object = new Object(),
+        response : Object,
+        date : Date = new Date(),
+        FieldValueMapping = JSON.parse(args.FieldValueMapping);
+
+    try {
+        var FieldConfigurationCO : dw.object.CustomObject = new object.CustomObjectMgr.getCustomObject("EmarsysDBLoadConfig","dbloadConfig"),
+            FieldConfiguration                            = JSON.parse(FieldConfigurationCO.custom.mappedFields),
+            ProfileFieldsCO : dw.object.CustomObject      = new object.CustomObjectMgr.getCustomObject("EmarsysProfileFields","profileFields"),
+            ProfileFields                                 = JSON.parse(ProfileFieldsCO.custom.result);
+
+        var sitePrefs : SitePreferences = dw.system.Site.current.preferences.custom,
+            language = sitePrefs['emarsysLanguage'],
+            asList = sitePrefs['emarsysAsList'],
+            newsletter = sitePrefs['emarsysNewsletter'],
+            skipEmpty = sitePrefs['emarsysSkipEmpty'],
+            updateOnly = sitePrefs['emarsysUpdateOnly'],
+            enabled = sitePrefs['emarsysAutoImportEnabled'],
+            overwrite = sitePrefs['emarsysOverwriteContacts'];
+
+        request = {
+            "separator": args.Separator,
+            "text_separator": "\"",
+            "date_format": "YYYY-MM-DD",
+            "fieldnames": true,
+            "language" : language,
+            "as_list": asList,
+            "userlist_name": "auto-import-" + args.FileName,
+            "newsletter": newsletter,
+            "skip_empty": skipEmpty,
+            "update_only": updateOnly,
+            "file_pattern": args.FileName+ ".csv",
+            "enabled": enabled,
+            "overwrite": overwrite,
+            "fields": []
+        };
+        var index = 0;
+        for each(var configField in FieldConfiguration){
+            for each(var profileField in ProfileFields){
+                if(configField['field'] == profileField['id']){
+                    var values = [];
+                    if(profileField['id'] in FieldValueMapping){
+                        values = FieldValueMapping[profileField['id']];
+                    }
+                    request.fields.push({
+                        "id": index,
+                        "field_name": profileField['name'],
+                        "is_key": (profileField['name'] == "E-Mail" ? true : false),
+                        "element_name": profileField['name'],
+                        "element_id": profileField['id'],
+                        "values": values
+                    });
+                    break;
+                }
+            }
+            index++;
+        }
+
+        // add all opt-in values to the request
+        var optInValues = FieldValueMapping['31'];
+        request.fields.push({
+            "id": index,
+            "field_name": "Opt-In",
+            "is_key": false,
+            "element_name": "Opt-In",
+            "element_id": 31,
+            "values": optInValues
+        });
+        response = emarsysHelper.triggerAPICall("emarsys.api", "settings/autoimports", request, "POST");
+
+        if (response.status != "OK") {
+            logger.info("[Create auto import profile: {0}] - ***Emarsys Auto import message: {1}", response.error, response.errorMessage);
+            return PIPELET_ERROR;
+        }
+
+    } catch(err) {
+        logger.error("[CreateAutoImportProfile.ds #" + err.lineNumber + "] - ***Emarsys Auto import error message: " + err);
+        return PIPELET_ERROR;
+    }
+
+    return PIPELET_NEXT;
+}

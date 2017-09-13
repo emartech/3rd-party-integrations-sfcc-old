@@ -1,0 +1,48 @@
+/**
+* The script for retrieving and storing profile fields from Emarsys
+* @output ErrorMsg : String
+*/
+var system = require('dw/system'),
+    util   = require('dw/util'),
+    web    = require('dw/web'),
+    obj    = require('dw/object'),
+    svc    = require('dw/svc'),
+    net    = require('dw/net'),
+    io     = require('dw/io'),
+    crypto = require('dw/crypto');
+
+function execute( args : PipelineDictionary ) : Number {
+
+    var emarsysHelper : Object = new (require("./../scripts/util/EmarsysHelper"))(),
+        language : String = system.Site.getCurrent().getCustomPreferenceValue("emarsysGetProfileFieldsLanguage"),
+        UniqueObjectKey : String = "profileFields";
+
+    try {
+
+        var profileFields = emarsysHelper.triggerAPICall("emarsys.api", "field/translate/" + language, null, "GET");
+
+        if (profileFields.status !== "OK") {
+            system.Logger.error("Get profile fileds error: " + profileFields.error + "] - ***Emarsys error message: " + profileFields.errorMessage);
+            return PIPELET_ERROR;
+        }
+
+        if(!empty(profileFields) && profileFields.status == "OK") {
+            var result = JSON.parse(profileFields.object);
+                result = JSON.stringify(result.data);
+            var CheckObject : obj.CustomObject = obj.CustomObjectMgr.getCustomObject("EmarsysProfileFields", UniqueObjectKey);
+
+            if(CheckObject != null) {
+                obj.CustomObjectMgr.remove(CheckObject);
+            }
+            var Store : obj.CustomObject = obj.CustomObjectMgr.createCustomObject("EmarsysProfileFields", UniqueObjectKey);
+            Store.custom.result = result;
+        }
+
+    } catch(err) {
+        system.Logger.error("[GetProfileFieldsJob.ds #" + err.lineNumber + "] - ***Emarsys get profile fields error: " + err);
+        args.ErrorMsg = "Error message is:" + err;
+        return PIPELET_ERROR;
+    }
+
+    return PIPELET_NEXT;
+}

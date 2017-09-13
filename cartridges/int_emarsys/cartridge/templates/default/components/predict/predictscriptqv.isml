@@ -1,0 +1,7 @@
+<isif condition="${isQuickView && dw.system.Site.current.getCustomPreferenceValue('emarsysPredictEnableJSTrackingCode')}">
+    <script type="text/javascript">
+        // tracking command
+        ScarabQueue.push(['view', '<isprint value="${pdict.Product.ID}" encoding="off" />']);
+        ScarabQueue.push(['go']);
+    </script>
+</isif>

@@ -1,0 +1,46 @@
+/**
+* Demandware Script File
+* to send a call to Emarsys to trigger corresponding external event
+*
+*
+*   @input Email : String
+*   @input ExternalEvent : String
+*	
+*
+*/
+var logger = require("dw/system/Logger");
+
+function execute( args : PipelineDictionary ) : Number
+{
+    var emarsysHelper : Object = new (require("./../util/EmarsysHelper"))(),
+		triggerEvent,
+		request : Object = new Object();
+	
+	try {
+		
+		var externalEventId = args.ExternalEvent;
+		
+		if (externalEventId) {
+	    	var endpoint = "event/" + externalEventId + "/trigger";
+			
+			request = {
+				"key_id": "3",
+				"external_id": args.Email
+			};
+			
+			triggerEvent = emarsysHelper.triggerAPICall("emarsys.api", endpoint, request, "POST");
+			
+			if (triggerEvent.status !== "OK") {
+				logger.error("[Trigger event error:" + triggerEvent.error + "] - ***Emarsys error message: " + triggerEvent.errorMessage);
+				return PIPELET_ERROR;
+			}
+		}
+		
+	} catch(err) {
+		// log error message in case something goes wrong
+		logger.error("[TriggerEvent.ds #" + err.lineNumber + "] - ***Emarsys trigger event data error message: " + err);
+		return PIPELET_ERROR;
+	}
+	
+	return PIPELET_NEXT;
+}

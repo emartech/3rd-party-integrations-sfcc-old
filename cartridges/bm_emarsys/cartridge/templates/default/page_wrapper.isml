@@ -1,0 +1,18 @@
+<iscontent type="text/html" charset="UTF-8" compact="true">
+<isinclude template="inc/Modules">
+<isinclude template="application/modules">
+<isinclude url="${URLUtils.url('SiteNavigationBar-IncludeFrameTop','SelectedMenuItem',pdict.SelectedMenuItem,'CurrentMenuItemId',pdict.CurrentMenuItemId)}">
+
+<iscomment>Render BM breadcrumbs</iscomment>
+<isif condition="${pdict.CurrentHttpParameterMap.CurrentMenuItemId != ''}">
+    <isset name="level1" value="${URLUtils.url('ViewApplication-SelectSite', 'MenuGroupID', 'ChannelMenu', 'ChannelID', pdict.ChannelID, 'SelectedSiteID', pdict.ChannelID)}" scope="session" />
+    <isset name="level2" value="${URLUtils.url('SiteNavigationBar-ShowMenuitemOverview', 'CurrentMenuItemId', pdict.CurrentHttpParameterMap.CurrentMenuItemId)}" scope="session" />
+    <isset name="level2Name" value="${pdict.CurrentHttpParameterMap.mainmenuname}" scope="session" />
+    <isset name="currentLevel" value="${pdict.CurrentHttpParameterMap.menuname}">
+</isif>
+<ISBreadcrumb name1="Merchant Tools" url1="${session.custom.level1}" name2=" ${session.custom.level2Name}" url2=" ${session.custom.level2.toString()}" name3=" ${session.custom.currentLevel}" />
+
+<iscomment>Render the page</iscomment>
+<isreplace/>
+
+<isinclude url="${URLUtils.url('SiteNavigationBar-IncludeFrameBottom')}">

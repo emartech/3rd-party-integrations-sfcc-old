@@ -1,0 +1,9 @@
+<iscontent type="text/html" charset="UTF-8" compact="true"/>
+<iscache type="relative" hour="24"/>
+<isinclude template="util/modules"/>
+
+<isdecorate template="content/content/pt_content">
+    <div class="show-confirmation-message">
+        <h1>${Resource.msg("subscription.disabled", "emarsys", null)}</h1>
+    </div>
+</isdecorate>

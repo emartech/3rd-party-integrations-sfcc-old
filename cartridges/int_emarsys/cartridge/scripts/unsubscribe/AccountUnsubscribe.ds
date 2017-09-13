@@ -1,0 +1,76 @@
+/**
+* Demandware Script File
+* Script makes a call to Emarsys for unsubscribing user from demandware account page
+*	@input Email : String
+*	@output Status : String
+*/
+
+var logger = require("dw/system/Logger"),
+	util =require("dw/util");
+
+function execute( args : PipelineDictionary ) : Number
+{
+
+	var emarsysHelper : Object = new (require("./../util/EmarsysHelper"))(),
+		contactData,
+		request : Object = new Object();
+	
+	
+	if (empty(args.Email)){
+		args.Status = 'NO EMAIL';
+		return PIPELET_NEXT;
+	}
+		
+	try {
+		request = {
+			"keyId": "3",
+			"keyValues": [args.Email],
+			"fields" : ["31"]
+		}
+		
+		// call to get contact data on Emarsys
+		contactData = emarsysHelper.triggerAPICall("emarsys.api", "contact/getdata", request, "POST");
+		
+		if (contactData.status !== "OK") {
+			logger.error("[AccountUnsubscribe.ds; Get contact data error:" + contactData.error + "] - ***Emarsys unsubscribe from account page error message: " + contactData.errorMessage);
+			return PIPELET_ERROR;
+		}
+		
+		var dataObj = JSON.parse(contactData.object);
+		
+		var errors = dataObj.data.errors;
+		
+		if (errors.length > 0) {
+			var error = errors[0];
+			// check if account exists, error code 2008 means that account wasn't created yet
+			if (error.errorCode == "2008") {
+				args.Status = "NOT REGISTERED";
+				return PIPELET_NEXT;
+			}
+		} else {
+			request = {
+				"3": args.Email,
+				"31": "2",
+				"key_id": "3"
+			}
+			
+			// if source id value exists add it to request
+			emarsysHelper.addSourceIdToRequest(request);
+			
+			contactData = emarsysHelper.triggerAPICall("emarsys.api", "contact", request, "PUT");
+			if (contactData.status !== "OK") {
+				logger.error("[AccountUnsubscribe.ds; Update contact data error:" + contactData.error + "] - ***Emarsys unsubscribe from account page error message: " + contactData.errorMessage);
+				return PIPELET_ERROR;
+			}
+			args.Status = 'SUCCESS';
+			return PIPELET_NEXT;
+		}
+		
+	} catch(err) {
+		// log error message in case something goes wrong
+		logger.error("[AccountUnsubscribe.ds #" + err.lineNumber + "] - ***Emarsys unsubscribe from account page error message: " + err);
+		return PIPELET_ERROR;
+	}
+
+	return PIPELET_NEXT;
+}

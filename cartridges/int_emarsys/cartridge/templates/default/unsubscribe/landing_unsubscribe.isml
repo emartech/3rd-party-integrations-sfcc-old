@@ -1,0 +1,30 @@
+<iscontent type="text/html" charset="UTF-8" compact="true"/>
+<isdecorate template="content/content/pt_content">
+
+<div class="show-confirmation-message">
+    <iscomment>Render the confirmation</iscomment>
+    <isif condition="${!empty(pdict.ShowConfirmation) && pdict.ShowConfirmation == true}">
+        <h1><isprint value="${Resource.msg('nu.title', 'newsletter_unsubscribe', null)}" /></h1>
+        <p>
+            <isprint value="${Resource.msg('nu.unsubscribe.confirmation.message', 'newsletter_unsubscribe', null)}" />
+        </p>
+
+        <form action="${URLUtils.httpsContinue()}" method="post" id="newsletterUnsubscribe">
+            <p>
+                <button type="submit" name="${session.forms.newsletter_unsubscribe.newsletter_unsubscribe.htmlName}" class="button">
+                    <isprint value="${Resource.msg('nu.button.name', 'newsletter_unsubscribe', null)}" />
+                </button>
+            </p>
+        </form>
+    </isif>
+
+    <iscomment>Render messages</iscomment>
+    <isif condition="${!empty(pdict.Errors) && pdict.Errors == false}">
+        <h1><isprint value="${Resource.msg('nu.unsubscribe.success', 'newsletter_unsubscribe', null)}" /></h1>
+        <isprint value="${Resource.msg('nu.unsubscribe.success', 'newsletter_unsubscribe', null)}" />
+    <iselseif condition="${!empty(pdict.Errors) && pdict.Errors == true}">
+        <h1><isprint value="${Resource.msg('nu.unsubscribe.error', 'newsletter_unsubscribe', null)}" /></h1>
+        <isprint value="${pdict.ErrorText}" encoding="off" />
+    </isif>
+</div>
+</isdecorate>

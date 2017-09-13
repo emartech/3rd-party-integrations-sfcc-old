@@ -1,0 +1,26 @@
+<iscontent type="text/html" charset="UTF-8" compact="true"/>
+<isdecorate template="content/content/pt_content">
+
+<div class="show-confirmation-message">
+    <h1><isprint value="${Resource.msg('nu.title', 'newsletter_unsubscribe', null)}" /></h1>
+
+    <iscomment>Render messages</iscomment>
+    <isif condition="${!empty(pdict.Status) && pdict.Status == 'SUCCESS'}">
+        <p>
+            <isprint value="${Resource.msg('nu.unsubscribe.success', 'newsletter_unsubscribe', null)}" />
+        </p>
+    <iselseif condition="${!empty(pdict.Status) && pdict.Status == 'NOT REGISTERED'}" >
+        <p>
+            <isprint value="${Resource.msg('nu.no.account', 'newsletter_unsubscribe', null)}" />
+        </p>
+	<iselseif condition="${!empty(pdict.Status) && pdict.Status == 'NO EMAIL'}" >
+        <p>
+            <isprint value="${Resource.msg('nu.no.email', 'newsletter_unsubscribe', null)}" />
+        </p>
+    <iselse>
+    	<p>
+            <isprint value="${Resource.msg('nu.unsubscribe.error', 'newsletter_unsubscribe', null)}" />
+        </p>
+    </isif>
+</div>
+</isdecorate>
