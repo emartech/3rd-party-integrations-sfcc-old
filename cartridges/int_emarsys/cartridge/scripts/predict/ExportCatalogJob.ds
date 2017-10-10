@@ -59,7 +59,7 @@ function execute( args : PipelineDictionary ) : Number {
                     exportType = predictConfig.custom.exportType;
 
                 //Are we exporting all products or master products only?
-                if( (exportType == "master" && product.isMaster()) || (exportType == "variations" && !product.isMaster()) ) {
+                if( (exportType == "master" && product.isMaster()) || (exportType == "variations") ) {
                     emarsysHelper.getProductInfo(mappedFields, product, productInfo);
                 }
             }
