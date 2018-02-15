@@ -199,7 +199,7 @@ function renderAttributeValue(attributesChain, order, lineItem) {
          */
         case 'c_sales_amount':
             var price = getPrice(lineItem);
-            if (order.status == order.ORDER_STATUS_CANCELLED) {
+            if (order.status.value == order.ORDER_STATUS_CANCELLED) {
                 price = -price;
             }
             return price || '0';

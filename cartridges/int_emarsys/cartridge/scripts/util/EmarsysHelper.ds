@@ -2,20 +2,18 @@
  * Helper class for working with Emarsys API
  *
  */
-
-
-var util = require("dw/util"),
-    crypto = require("dw/crypto"),
-    web = require("dw/web"),
-    value = require("dw/value"),
-    catalog = require("dw/catalog"),
-    order = require("dw/order"),
-    svc = require("dw/svc"),
-    system = require("dw/system"),
+var util         = require("dw/util"),
+    crypto       = require("dw/crypto"),
+    web          = require("dw/web"),
+    value        = require("dw/value"),
+    catalog      = require("dw/catalog"),
+    order        = require("dw/order"),
+    svc          = require("dw/svc"),
+    system       = require("dw/system"),
     priceBookMgr = require("dw/catalog/PriceBookMgr"),
-    sftpClient = require("dw/net/SFTPClient"),
-    logger = require("dw/system/Logger"),
-    io = require("dw/io");
+    sftpClient   = require("dw/net/SFTPClient"),
+    logger       = require("dw/system/Logger"),
+    io           = require("dw/io");
 
 function EmarsysHelper() {
 
@@ -227,10 +225,9 @@ function EmarsysHelper() {
         }
     };
 
-    this.getProductInfo = function (mappedFields, product, dataObject) {
+    this.getProductInfo = function (mappedFields, product, dataObject, siteLocales, defaultLocale) {
         if (mappedFields && product && dataObject) {
-            var url = this.returnProductURL(product),
-                productInfo = [];
+            var productInfo = [];
 
             for (var j = 0; j < mappedFields.length; j++) {
 
@@ -242,17 +239,26 @@ function EmarsysHelper() {
 
                     case 'product':
                         if (splitField[1] == "url") {
-                            productInfo.push(url.toString());
+
+                            for (var localeIndex = 0; localeIndex < siteLocales.length; localeIndex++) {
+                                var setRequest = siteLocales[localeIndex] === 'default' ? request.setLocale(defaultLocale) : request.setLocale(siteLocales[localeIndex]),
+                                    url        = this.returnProductURL(product);
+                                productInfo.push(url.toString());
+                            }
+                            var setRequest = request.setLocale(defaultLocale);
+
                         } else if (splitField[1] == "image") {
-                            var viewType = dw.system.Site.current.preferences.custom.emarsysProductImageSize,
+                            var viewType    = dw.system.Site.current.preferences.custom.emarsysProductImageSize,
                                 parsedImage = product.getImage(viewType) !== null ? product.getImage(viewType).getAbsURL().toString() : "";
                             productInfo.push(parsedImage);
                         } else if (splitField[1] == "price") {
                             var productPrice = product.getPriceModel().getMaxPrice();
+
                             if(product instanceof dw.catalog.Variant){
                                 productPrice = product.getPriceModel().getPrice();
                             }
                             var priceValue = productPrice.getValueOrNull();
+
                             if (!empty(priceValue)) {
                                 productInfo.push(priceValue.toFixed(2));
                             } else {
@@ -261,33 +267,47 @@ function EmarsysHelper() {
 
                         } else if (splitField[1] == "availability") {
                             productInfo.push(product.getAvailabilityModel().isOrderable());
+                        } else if (splitField[1] == "name") {
+
+                            for (var localeIndex = 0; localeIndex < siteLocales.length; localeIndex++) {
+                                var setRequest = siteLocales[localeIndex] === 'default' ? request.setLocale(defaultLocale) : request.setLocale(siteLocales[localeIndex]);
+                                productInfo.push(product.getName());
+                            }
+                            var setRequest = request.setLocale(defaultLocale);
+
                         } else if (splitField[1] == "categories") {
-                            var categories = product.getOnlineCategories().toArray();
-                            var path : dw.util.Collection = new dw.util.ArrayList();
-                            var pathsArray : dw.util.Collection = new dw.util.ArrayList();
 
-                            if(product instanceof dw.catalog.Variant){
-                                categories = product.masterProduct.getOnlineCategories().toArray();
-                            }
-                            var category;
-
-                            if (categories.length > 0) {
-                                for (var i = 0; i < categories.length; i++) {
-                                    category = categories[i];
-                                    path = new dw.util.ArrayList();
-                                    // find the path for each of the categories
-                                    while( category.parent != null )
-                                    {
-                                        if( category.online ) path.addAt( 0, category.displayName );
-                                        category = category.parent;
-                                    }
-                                    pathsArray.push(path.join(" > "));
+                            for (var localeIndex = 0; localeIndex < siteLocales.length; localeIndex++) {
+                                var setRequest = siteLocales[localeIndex] === 'default' ? request.setLocale(defaultLocale) : request.setLocale(siteLocales[localeIndex]),
+                                       categories = product.getOnlineCategories().toArray(),
+                                    path       = new dw.util.ArrayList(),
+                                    pathsArray = new dw.util.ArrayList();
+    
+                                if (product instanceof dw.catalog.Variant) {
+                                    categories = product.masterProduct.getOnlineCategories().toArray();
                                 }
-                                // push all the categories separated by |
-                                productInfo.push(pathsArray.join("|"));
-                            } else {
-                                productInfo.push('');
+                                var category;
+    
+                                if (categories.length > 0) {
+                                    for (var i = 0; i < categories.length; i++) {
+                                        category = categories[i];
+                                        path = new dw.util.ArrayList();
+                                        // find the path for each of the categories
+                                        while( category.parent != null )
+                                        {
+                                            if( category.online ) path.addAt( 0, category.displayName );
+                                            category = category.parent;
+                                        }
+                                        pathsArray.push(path.join(" > "));
+                                    }
+                                    // push all the categories separated by |
+                                    productInfo.push(pathsArray.join("|"));
+                                } else {
+                                    productInfo.push('');
+                                }
                             }
+                            var setRequest = request.setLocale(defaultLocale);
+
                         // get the user friendly name of variation attribute
                         } else if (product instanceof dw.catalog.Variant && splitField[1] == "custom") {
                             var productVariationAttributes = system.Site.getCurrent().getCustomPreferenceValue("emarsysPredictVariationAttributes");
@@ -295,6 +315,7 @@ function EmarsysHelper() {
                                // find the variation attributes from emarsysPredictVariationAttributes site preference
                             if (productVariationAttributes.indexOf(mappedFields[j].field) != -1) {
                                 var selectedAttribute = product.variationModel.getProductVariationAttribute(splitField[2]);
+
                                 if (!empty(selectedAttribute)) {
                                     var selectedValue = product.variationModel.getSelectedValue(selectedAttribute);
                                     // get the display value of variation attribute
@@ -725,18 +746,14 @@ function EmarsysHelper() {
     };
     
     this.createSmartInsightFeedName = function () {
-        var today = new Date(),
-            currentDate = util.StringUtils.formatCalendar(util.Calendar(today), "YYYYMMdd_HMMss"),
-            siteID = dw.system.Site.current.ID;
+        var siteID = dw.system.Site.current.ID;
 
-        var name = "sales_items_" + currentDate + "_" + siteID + ".csv";
+        var name = "sales_items_" + siteID + ".csv";
         return name;
     };
     
     this.createSmartInsightExportFile = function () {
-        var today = new Date(),
-            currentDate = util.StringUtils.formatCalendar(util.Calendar(today), "YYYYMMdd_HMMss"),
-            siteID = system.Site.current.getID(),
+        var siteID = system.Site.current.getID(),
             exportFolderPath = io.File.IMPEX + "/src/" + system.Site.getCurrent().getCustomPreferenceValue("emarsysSmartInsightIMPEXFolder"),
             exportFolder = new io.File(exportFolderPath);
         
@@ -744,7 +761,7 @@ function EmarsysHelper() {
             exportFolder.mkdirs();
         }
 
-        return new io.File(exportFolder.fullPath + io.File.SEPARATOR + "sales_items_" + currentDate + "_" + siteID + ".csv");
+        return new io.File(exportFolder.fullPath + io.File.SEPARATOR + "sales_items_" + siteID + ".csv");
     };
 
     this.addSourceIdToRequest = function(object) {

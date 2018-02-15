@@ -3,26 +3,29 @@
 *
 *   @output ErrorMsg : String
 */
-var system = require('dw/system'),
-    util   = require('dw/util'),
-    obj    = require('dw/object'),
-    net    = require('dw/net'),
-    io     = require('dw/io'),
+var system  = require('dw/system'),
+    util    = require('dw/util'),
+    obj     = require('dw/object'),
+    net     = require('dw/net'),
+    io      = require('dw/io'),
     catalog = require('dw/catalog');
 
 function execute( args : PipelineDictionary ) : Number {
 
-    var emarsysHelper : Object = new (require("./../util/EmarsysHelper"))(),
-        exportFolderName : String = system.Site.getCurrent().getCustomPreferenceValue("emarsysPredictIMPEXFolder"),
+    var currentSite      = system.Site.getCurrent(),
+        emarsysHelper    = new (require("./../util/EmarsysHelper"))(),
+        exportFolderName = currentSite.getCustomPreferenceValue("emarsysPredictIMPEXFolder"),
         //FTP configuration
-        sftpUsername = system.Site.getCurrent().getCustomPreferenceValue("emarsysPredictSFTPUsername"),
-        sftpPassword = system.Site.getCurrent().getCustomPreferenceValue("emarsysPredictSFTPPassword"),
-        sftpHost = system.Site.getCurrent().getCustomPreferenceValue("emarsysPredictSFTPHost"),
-        sftpPath = system.Site.getCurrent().getCustomPreferenceValue("emarsysPredictSFTPPath"),
+        sftpUsername     = currentSite.getCustomPreferenceValue("emarsysPredictSFTPUsername"),
+        sftpPassword     = currentSite.getCustomPreferenceValue("emarsysPredictSFTPPassword"),
+        sftpHost         = currentSite.getCustomPreferenceValue("emarsysPredictSFTPHost"),
+        sftpPath         = currentSite.getCustomPreferenceValue("emarsysPredictSFTPPath"),
         //Retrieve site catalog
-        siteCatalog = catalog.CatalogMgr.getSiteCatalog(),
+        siteCatalog      = catalog.CatalogMgr.getSiteCatalog(),
         //Retrieve Predict configuration
-        predictConfig : obj.CustomObject = obj.CustomObjectMgr.getCustomObject("EmarsysPredictConfig", "predictConfig");
+        predictConfig    = obj.CustomObjectMgr.getCustomObject("EmarsysPredictConfig", "predictConfig"),
+        siteLocales      = currentSite.getAllowedLocales(),
+        defaultLocale    = currentSite.getDefaultLocale();
 
     try {
         if (!empty(sftpUsername) && !empty(sftpPassword) && !empty(sftpHost) && !empty(siteCatalog) && !empty(predictConfig)) {
@@ -37,22 +40,36 @@ function execute( args : PipelineDictionary ) : Number {
             if (!exportFolder.exists()) {
                 exportFolder.mkdirs();
             }
+
             var exportFile = new io.File(exportFolder.fullPath + io.File.SEPARATOR + "products_" + siteID + ".csv"),
-                fileWriter  = new io.FileWriter(exportFile, "utf-8"),
-                writer = new io.CSVStreamWriter(fileWriter, ',', '"');
+                fileWriter = new io.FileWriter(exportFile, "utf-8"),
+                writer     = new io.CSVStreamWriter(fileWriter, ',', '"');
 
             //Write CSV header
             var mappedFields = JSON.parse(predictConfig.custom.mappedFields),
-                columnNames = [];
+                columnNames  = [];
             mappedFields.forEach(function(key, val) {
-                columnNames.push(key.placeholder);
+                if (key.placeholder.indexOf('_multilang') > 0) {
+                    for (var i = 0; i < siteLocales.length; i++) {
+                        if (siteLocales[i] != 'default') {
+                        	if (siteLocales[i] === defaultLocale) {
+                        		columnNames.push(key.placeholder.replace('_multilang', ''));
+                        	} else {
+                        		columnNames.push(key.placeholder.replace('multilang', siteLocales[i]));
+                        	}
+                        } else {
+                            columnNames.push(key.placeholder.replace('_multilang', ''));
+                        }
+                    }
+                } else {
+                    columnNames.push(key.placeholder);
+                }
             });
 
             writer.writeNext(columnNames);
 
             //Query the catalog
-            var products =  catalog.ProductMgr.queryProductsInCatalog(siteCatalog),
-                productInfo = [];
+            var products =  catalog.ProductMgr.queryProductsInCatalog(siteCatalog);
 
             while (products.hasNext()) {
                 var product = products.next(),
@@ -60,14 +77,15 @@ function execute( args : PipelineDictionary ) : Number {
 
                 //Are we exporting all products or master products only?
                 if( (exportType == "master" && product.isMaster()) || (exportType == "variations") ) {
-                    emarsysHelper.getProductInfo(mappedFields, product, productInfo);
+                    var productInfo = [];
+                    emarsysHelper.getProductInfo(mappedFields, product, productInfo, siteLocales, defaultLocale);
+                    
+                    //Write product info
+                    productInfo.forEach(function(key, val) {
+                        writer.writeNext(productInfo[val]);
+                    });
                 }
             }
-
-            //Write product info
-            productInfo.forEach(function(key, val) {
-                writer.writeNext(productInfo[val]);
-            });
 
             //Upload to SFTP
             var sftp = new net.SFTPClient(),

@@ -44,6 +44,9 @@
             var doWhile = true;
             var currentCategory = pdict.ProductSearchResult.category;
             var categoryChain = [];
+            var currentUserLocale = request.locale;
+            var defaultLocale = dw.system.Site.getCurrent().getDefaultLocale();
+            var setRequest = request.setLocale(defaultLocale);
             while(doWhile){
                 if(currentCategory !== null && currentCategory.parent !== null && currentCategory.ID !== 'root' && currentCategory.root !== true){
                     if(currentCategory.online){
@@ -55,6 +58,7 @@
                     categoryChain = categoryChain.join(" > ");
                 }
             }
+            var setRequest = request.setLocale(currentUserLocale);
         </isscript>
         <script type="text/javascript">
 
