@@ -21,7 +21,7 @@
     </iscomment>
 
     <iscomment>Cart information availabe on page load</iscomment>
-    <isinclude url="${URLUtils.url('Predict-GetCartInfo')}"/>
+    <isinclude template="components/predict/cartinfo" />
 
     <isif condition="${pageContext.ns == 'product'}">
         <script type="text/javascript">
