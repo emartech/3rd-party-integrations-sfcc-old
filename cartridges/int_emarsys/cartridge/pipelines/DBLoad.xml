@@ -47,254 +47,16 @@
         <decision-node condition-key="!ExportStatus" condition-operator="expr"/>
         <node-display x="0" y="1"/>
         <branch basename="b2" source-connector="yes">
-          <transition target-connector="in"/>
+          <transition target-connector="in">
+            <transition-display>
+              <bend-point relative-to="target" x="0" y="-2"/>
+            </transition-display>
+          </transition>
           <segment>
-            <node>
-              <pipelet-node pipelet-name="SearchSystemObject" pipelet-set-identifier="bc_api">
-                <config-property key="ObjectType" value="Profile"/>
-                <config-property key="CaseSensitive" value="false"/>
-                <config-property key="SearchExpression" value="NOT custom.emarsysExportedProfileFlag LIKE true"/>
-                <key-binding alias="Profiles" key="SearchResult"/>
-                <key-binding alias="ProfilesCount" key="SearchResultCount"/>
-                <key-binding alias="null" key="Search1Key"/>
-                <key-binding alias="null" key="Search1Value"/>
-                <key-binding alias="null" key="Search2Key"/>
-                <key-binding alias="null" key="Search2Value"/>
-                <key-binding alias="null" key="Search3Key"/>
-                <key-binding alias="null" key="Search3Value"/>
-                <key-binding alias="null" key="Search4Key"/>
-                <key-binding alias="null" key="Search4Value"/>
-                <key-binding alias="null" key="Search5Key"/>
-                <key-binding alias="null" key="Search5Value"/>
-                <key-binding alias="null" key="SortBy1"/>
-                <key-binding alias="null" key="SortBy1Direction"/>
-                <key-binding alias="null" key="SortBy2"/>
-                <key-binding alias="null" key="SortBy2Direction"/>
-                <key-binding alias="null" key="SortBy3"/>
-                <key-binding alias="null" key="SortBy3Direction"/>
-              </pipelet-node>
-              <node-display x="0" y="1"/>
-            </node>
-            <simple-transition>
-              <transition-display>
-                <bend-point relative-to="source" x="0" y="1"/>
-              </transition-display>
-            </simple-transition>
-            <node>
-              <decision-node condition-key="ProfilesCount &gt; 0" condition-operator="expr"/>
-              <node-display x="0" y="1"/>
-              <branch basename="b2" source-connector="yes">
-                <transition target-connector="in"/>
-                <segment>
-                  <node>
-                    <pipelet-node pipelet-name="Assign" pipelet-set-identifier="bc_api">
-                      <config-property key="Transactional" value="false"/>
-                      <key-binding alias="dw.system.Logger.info(&quot;The Customer Export started, exporting &quot; + ProfilesCount + &quot; customers&quot;)" key="From_0"/>
-                      <key-binding alias="DoIt" key="To_0"/>
-                      <key-binding alias="null" key="From_1"/>
-                      <key-binding alias="null" key="To_1"/>
-                      <key-binding alias="null" key="From_2"/>
-                      <key-binding alias="null" key="To_2"/>
-                      <key-binding alias="null" key="From_3"/>
-                      <key-binding alias="null" key="To_3"/>
-                      <key-binding alias="null" key="From_4"/>
-                      <key-binding alias="null" key="To_4"/>
-                      <key-binding alias="null" key="From_5"/>
-                      <key-binding alias="null" key="To_5"/>
-                      <key-binding alias="null" key="From_6"/>
-                      <key-binding alias="null" key="To_6"/>
-                      <key-binding alias="null" key="From_7"/>
-                      <key-binding alias="null" key="To_7"/>
-                      <key-binding alias="null" key="From_8"/>
-                      <key-binding alias="null" key="To_8"/>
-                      <key-binding alias="null" key="From_9"/>
-                      <key-binding alias="null" key="To_9"/>
-                    </pipelet-node>
-                    <node-display x="0" y="1"/>
-                  </node>
-                  <simple-transition/>
-                  <node>
-                    <pipelet-node pipelet-name="Script" pipelet-set-identifier="bc_api">
-                      <config-property key="Transactional" value="true"/>
-                      <config-property key="OnError" value="PIPELET_ERROR"/>
-                      <config-property key="ScriptFile" value="util/DBLoad/ExportProfilesAsCSV.ds"/>
-                      <config-property key="Timeout" value="3000"/>
-                      <key-binding alias="ScriptLog" key="ScriptLog"/>
-                      <key-binding alias="Profiles" key="Profiles"/>
-                      <key-binding alias="FileName" key="FileName"/>
-                      <key-binding alias="Separator" key="Separator"/>
-                      <key-binding alias="ErrorMsg" key="ErrorMsg"/>
-                      <key-binding alias="OptInStatus" key="OptInStatus"/>
-                      <key-binding alias="OptInStatusAttribute" key="OptInStatusAttribute"/>
-                      <key-binding alias="FolderName" key="FolderName"/>
-                      <key-binding alias="GenderValueCodes" key="GenderValueCodes"/>
-                      <key-binding alias="CountryValueCodes" key="CountryValueCodes"/>
-                      <key-binding alias="FieldValueMapping" key="FieldValueMapping"/>
-                      <key-binding alias="JobExportStatus" key="ExportStatus"/>
-                    </pipelet-node>
-                    <node-display x="0" y="1"/>
-                    <branch basename="b2" source-connector="error">
-                      <transition target-connector="in">
-                        <transition-display>
-                          <bend-point relative-to="source" x="1" y="0"/>
-                        </transition-display>
-                      </transition>
-                      <segment>
-                        <node>
-                          <pipelet-node pipelet-name="Assign" pipelet-set-identifier="bc_api">
-                            <config-property key="Transactional" value="false"/>
-                            <key-binding alias="dw.system.Logger.error('The Customer export failed. Error: ' + ErrorMsg)" key="From_0"/>
-                            <key-binding alias="DoIt" key="To_0"/>
-                            <key-binding alias="null" key="From_1"/>
-                            <key-binding alias="null" key="To_1"/>
-                            <key-binding alias="null" key="From_2"/>
-                            <key-binding alias="null" key="To_2"/>
-                            <key-binding alias="null" key="From_3"/>
-                            <key-binding alias="null" key="To_3"/>
-                            <key-binding alias="null" key="From_4"/>
-                            <key-binding alias="null" key="To_4"/>
-                            <key-binding alias="null" key="From_5"/>
-                            <key-binding alias="null" key="To_5"/>
-                            <key-binding alias="null" key="From_6"/>
-                            <key-binding alias="null" key="To_6"/>
-                            <key-binding alias="null" key="From_7"/>
-                            <key-binding alias="null" key="To_7"/>
-                            <key-binding alias="null" key="From_8"/>
-                            <key-binding alias="null" key="To_8"/>
-                            <key-binding alias="null" key="From_9"/>
-                            <key-binding alias="null" key="To_9"/>
-                          </pipelet-node>
-                          <node-display orientation="horizontal" x="1" y="0"/>
-                        </node>
-                        <simple-transition>
-                          <transition-display>
-                            <bend-point relative-to="source" x="1" y="0"/>
-                          </transition-display>
-                        </simple-transition>
-                        <node>
-                          <stop-node name="ERROR"/>
-                          <node-display orientation="horizontal" x="1" y="0"/>
-                        </node>
-                      </segment>
-                    </branch>
-                  </node>
-                  <simple-transition>
-                    <transition-display>
-                      <bend-point relative-to="source" x="0" y="1"/>
-                    </transition-display>
-                  </simple-transition>
-                  <node>
-                    <decision-node condition-key="!(JobExportStatus &amp;&amp; dw.system.Site.current.getCustomPreferenceValue('emarsysDBLoadNotificationEmail') != null)" condition-operator="expr"/>
-                    <node-display x="0" y="1"/>
-                    <branch basename="b3" source-connector="yes">
-                      <transition target-connector="in">
-                        <transition-display>
-                          <bend-point relative-to="source" x="0" y="1"/>
-                        </transition-display>
-                      </transition>
-                      <segment>
-                        <node>
-                          <pipelet-node pipelet-name="Assign" pipelet-set-identifier="bc_api">
-                            <config-property key="Transactional" value="false"/>
-                            <key-binding alias="dw.system.Logger.info(&quot;The Customer Export successfully finished&quot;)" key="From_0"/>
-                            <key-binding alias="DoIt" key="To_0"/>
-                            <key-binding alias="null" key="To_1"/>
-                            <key-binding alias="null" key="From_2"/>
-                            <key-binding alias="null" key="To_2"/>
-                            <key-binding alias="null" key="From_3"/>
-                            <key-binding alias="null" key="To_3"/>
-                            <key-binding alias="null" key="From_4"/>
-                            <key-binding alias="null" key="To_4"/>
-                            <key-binding alias="null" key="From_5"/>
-                            <key-binding alias="null" key="To_5"/>
-                            <key-binding alias="null" key="From_6"/>
-                            <key-binding alias="null" key="To_6"/>
-                            <key-binding alias="null" key="From_7"/>
-                            <key-binding alias="null" key="To_7"/>
-                            <key-binding alias="null" key="From_8"/>
-                            <key-binding alias="null" key="To_8"/>
-                            <key-binding alias="null" key="From_9"/>
-                            <key-binding alias="null" key="To_9"/>
-                          </pipelet-node>
-                          <node-display x="0" y="1"/>
-                        </node>
-                        <transition target-connector="in1" target-path="../+1"/>
-                      </segment>
-                    </branch>
-                  </node>
-                  <simple-transition>
-                    <transition-display>
-                      <bend-point relative-to="source" x="1" y="0"/>
-                    </transition-display>
-                  </simple-transition>
-                  <node>
-                    <pipelet-node pipelet-name="Assign" pipelet-set-identifier="bc_api">
-                      <config-property key="Transactional" value="false"/>
-                      <key-binding alias="dw.system.Site.current.getCustomPreferenceValue('emarsysDBLoadNotificationEmail')" key="From_0"/>
-                      <key-binding alias="MailFrom" key="To_0"/>
-                      <key-binding alias="MailTo" key="To_1"/>
-                      <key-binding alias="null" key="From_2"/>
-                      <key-binding alias="MailSubject" key="To_2"/>
-                      <key-binding alias="&quot;email/dbload_notification&quot;" key="From_3"/>
-                      <key-binding alias="MailTemplate" key="To_3"/>
-                      <key-binding alias="null" key="From_4"/>
-                      <key-binding alias="null" key="To_4"/>
-                      <key-binding alias="null" key="From_5"/>
-                      <key-binding alias="null" key="To_5"/>
-                      <key-binding alias="null" key="From_6"/>
-                      <key-binding alias="null" key="To_6"/>
-                      <key-binding alias="null" key="From_7"/>
-                      <key-binding alias="null" key="To_7"/>
-                      <key-binding alias="null" key="From_8"/>
-                      <key-binding alias="null" key="To_8"/>
-                      <key-binding alias="null" key="From_9"/>
-                      <key-binding alias="null" key="To_9"/>
-                      <key-binding alias="dw.system.Site.current.getCustomPreferenceValue('emarsysDBLoadNotificationEmail')" key="From_1"/>
-                    </pipelet-node>
-                    <node-display orientation="horizontal" x="1" y="0"/>
-                  </node>
-                  <simple-transition>
-                    <transition-display>
-                      <bend-point relative-to="source" x="1" y="0"/>
-                    </transition-display>
-                  </simple-transition>
-                  <node>
-                    <pipelet-node pipelet-name="SendMail" pipelet-set-identifier="bc_api">
-                      <key-binding alias="MailFrom" key="MailFrom"/>
-                      <key-binding alias="MailTemplate" key="MailTemplate"/>
-                      <key-binding alias="MailTo" key="MailTo"/>
-                      <key-binding alias="null" key="MailSubject"/>
-                      <key-binding alias="null" key="LocaleID"/>
-                      <key-binding alias="null" key="MailCC"/>
-                      <key-binding alias="null" key="MailBCC"/>
-                    </pipelet-node>
-                    <node-display orientation="horizontal" x="1" y="0"/>
-                  </node>
-                  <transition target-connector="in1" target-path="./+1">
-                    <transition-display>
-                      <bend-point relative-to="source" x="1" y="0"/>
-                      <bend-point relative-to="source" x="1" y="4"/>
-                    </transition-display>
-                  </transition>
-                </segment>
-                <segment>
-                  <node>
-                    <join-node/>
-                    <node-display x="-2" y="2"/>
-                  </node>
-                  <simple-transition/>
-                  <node>
-                    <end-node name="OK"/>
-                    <node-display x="0" y="1"/>
-                  </node>
-                </segment>
-              </branch>
-            </node>
-            <simple-transition/>
             <node>
               <pipelet-node pipelet-name="Assign" pipelet-set-identifier="bc_api">
                 <config-property key="Transactional" value="false"/>
-                <key-binding alias="dw.system.Logger.info(&quot;Customer Export finished, no customers to export&quot;)" key="From_0"/>
+                <key-binding alias="dw.system.Logger.info(&quot;The Customer Export started&quot;)" key="From_0"/>
                 <key-binding alias="DoIt" key="To_0"/>
                 <key-binding alias="null" key="From_1"/>
                 <key-binding alias="null" key="To_1"/>
@@ -315,6 +77,146 @@
                 <key-binding alias="null" key="From_9"/>
                 <key-binding alias="null" key="To_9"/>
               </pipelet-node>
+              <node-display x="0" y="3"/>
+            </node>
+            <simple-transition/>
+            <node>
+              <pipelet-node pipelet-name="Script" pipelet-set-identifier="bc_api">
+                <config-property key="Transactional" value="true"/>
+                <config-property key="OnError" value="PIPELET_ERROR"/>
+                <config-property key="ScriptFile" value="util/DBLoad/ExportProfilesAsCSV.ds"/>
+                <config-property key="Timeout" value="3000"/>
+                <key-binding alias="ScriptLog" key="ScriptLog"/>
+                <key-binding alias="FileName" key="FileName"/>
+                <key-binding alias="Separator" key="Separator"/>
+                <key-binding alias="ErrorMsg" key="ErrorMsg"/>
+                <key-binding alias="OptInStatus" key="OptInStatus"/>
+                <key-binding alias="OptInStatusAttribute" key="OptInStatusAttribute"/>
+                <key-binding alias="FolderName" key="FolderName"/>
+                <key-binding alias="GenderValueCodes" key="GenderValueCodes"/>
+                <key-binding alias="CountryValueCodes" key="CountryValueCodes"/>
+                <key-binding alias="FieldValueMapping" key="FieldValueMapping"/>
+                <key-binding alias="JobExportStatus" key="ExportStatus"/>
+              </pipelet-node>
+              <node-display x="0" y="1"/>
+              <branch basename="b2" source-connector="error">
+                <transition target-connector="in">
+                  <transition-display>
+                    <bend-point relative-to="source" x="1" y="0"/>
+                  </transition-display>
+                </transition>
+                <segment>
+                  <node>
+                    <pipelet-node pipelet-name="Assign" pipelet-set-identifier="bc_api">
+                      <config-property key="Transactional" value="false"/>
+                      <key-binding alias="dw.system.Logger.error('The Customer export failed. Error: ' + ErrorMsg)" key="From_0"/>
+                      <key-binding alias="DoIt" key="To_0"/>
+                      <key-binding alias="null" key="From_1"/>
+                      <key-binding alias="null" key="To_1"/>
+                      <key-binding alias="null" key="From_2"/>
+                      <key-binding alias="null" key="To_2"/>
+                      <key-binding alias="null" key="From_3"/>
+                      <key-binding alias="null" key="To_3"/>
+                      <key-binding alias="null" key="From_4"/>
+                      <key-binding alias="null" key="To_4"/>
+                      <key-binding alias="null" key="From_5"/>
+                      <key-binding alias="null" key="To_5"/>
+                      <key-binding alias="null" key="From_6"/>
+                      <key-binding alias="null" key="To_6"/>
+                      <key-binding alias="null" key="From_7"/>
+                      <key-binding alias="null" key="To_7"/>
+                      <key-binding alias="null" key="From_8"/>
+                      <key-binding alias="null" key="To_8"/>
+                      <key-binding alias="null" key="From_9"/>
+                      <key-binding alias="null" key="To_9"/>
+                    </pipelet-node>
+                    <node-display orientation="horizontal" x="1" y="0"/>
+                  </node>
+                  <simple-transition>
+                    <transition-display>
+                      <bend-point relative-to="source" x="1" y="0"/>
+                    </transition-display>
+                  </simple-transition>
+                  <node>
+                    <stop-node name="ERROR"/>
+                    <node-display orientation="horizontal" x="1" y="0"/>
+                  </node>
+                </segment>
+              </branch>
+            </node>
+            <simple-transition>
+              <transition-display>
+                <bend-point relative-to="source" x="0" y="1"/>
+              </transition-display>
+            </simple-transition>
+            <node>
+              <decision-node condition-key="!(JobExportStatus &amp;&amp; dw.system.Site.current.getCustomPreferenceValue('emarsysDBLoadNotificationEmail') != null)" condition-operator="expr"/>
+              <node-display x="0" y="1"/>
+              <branch basename="b3" source-connector="yes">
+                <transition target-connector="in">
+                  <transition-display>
+                    <bend-point relative-to="source" x="0" y="1"/>
+                  </transition-display>
+                </transition>
+                <segment>
+                  <node>
+                    <pipelet-node pipelet-name="Assign" pipelet-set-identifier="bc_api">
+                      <config-property key="Transactional" value="false"/>
+                      <key-binding alias="dw.system.Logger.info(&quot;The Customer Export successfully finished&quot;)" key="From_0"/>
+                      <key-binding alias="DoIt" key="To_0"/>
+                      <key-binding alias="null" key="To_1"/>
+                      <key-binding alias="null" key="From_2"/>
+                      <key-binding alias="null" key="To_2"/>
+                      <key-binding alias="null" key="From_3"/>
+                      <key-binding alias="null" key="To_3"/>
+                      <key-binding alias="null" key="From_4"/>
+                      <key-binding alias="null" key="To_4"/>
+                      <key-binding alias="null" key="From_5"/>
+                      <key-binding alias="null" key="To_5"/>
+                      <key-binding alias="null" key="From_6"/>
+                      <key-binding alias="null" key="To_6"/>
+                      <key-binding alias="null" key="From_7"/>
+                      <key-binding alias="null" key="To_7"/>
+                      <key-binding alias="null" key="From_8"/>
+                      <key-binding alias="null" key="To_8"/>
+                      <key-binding alias="null" key="From_9"/>
+                      <key-binding alias="null" key="To_9"/>
+                    </pipelet-node>
+                    <node-display x="0" y="1"/>
+                  </node>
+                  <transition target-connector="in1" target-path="../+1"/>
+                </segment>
+              </branch>
+            </node>
+            <simple-transition>
+              <transition-display>
+                <bend-point relative-to="source" x="1" y="0"/>
+              </transition-display>
+            </simple-transition>
+            <node>
+              <pipelet-node pipelet-name="Assign" pipelet-set-identifier="bc_api">
+                <config-property key="Transactional" value="false"/>
+                <key-binding alias="dw.system.Site.current.getCustomPreferenceValue('emarsysDBLoadNotificationEmail')" key="From_0"/>
+                <key-binding alias="MailFrom" key="To_0"/>
+                <key-binding alias="MailTo" key="To_1"/>
+                <key-binding alias="null" key="From_2"/>
+                <key-binding alias="MailSubject" key="To_2"/>
+                <key-binding alias="&quot;email/dbload_notification&quot;" key="From_3"/>
+                <key-binding alias="MailTemplate" key="To_3"/>
+                <key-binding alias="null" key="From_4"/>
+                <key-binding alias="null" key="To_4"/>
+                <key-binding alias="null" key="From_5"/>
+                <key-binding alias="null" key="To_5"/>
+                <key-binding alias="null" key="From_6"/>
+                <key-binding alias="null" key="To_6"/>
+                <key-binding alias="null" key="From_7"/>
+                <key-binding alias="null" key="To_7"/>
+                <key-binding alias="null" key="From_8"/>
+                <key-binding alias="null" key="To_8"/>
+                <key-binding alias="null" key="From_9"/>
+                <key-binding alias="null" key="To_9"/>
+                <key-binding alias="dw.system.Site.current.getCustomPreferenceValue('emarsysDBLoadNotificationEmail')" key="From_1"/>
+              </pipelet-node>
               <node-display orientation="horizontal" x="1" y="0"/>
             </node>
             <simple-transition>
@@ -323,8 +225,33 @@
               </transition-display>
             </simple-transition>
             <node>
-              <end-node name="OK"/>
+              <pipelet-node pipelet-name="SendMail" pipelet-set-identifier="bc_api">
+                <key-binding alias="MailFrom" key="MailFrom"/>
+                <key-binding alias="MailTemplate" key="MailTemplate"/>
+                <key-binding alias="MailTo" key="MailTo"/>
+                <key-binding alias="null" key="MailSubject"/>
+                <key-binding alias="null" key="LocaleID"/>
+                <key-binding alias="null" key="MailCC"/>
+                <key-binding alias="null" key="MailBCC"/>
+              </pipelet-node>
               <node-display orientation="horizontal" x="1" y="0"/>
+            </node>
+            <transition target-connector="in1" target-path="./+1">
+              <transition-display>
+                <bend-point relative-to="source" x="1" y="0"/>
+                <bend-point relative-to="source" x="1" y="4"/>
+              </transition-display>
+            </transition>
+          </segment>
+          <segment>
+            <node>
+              <join-node/>
+              <node-display x="-2" y="2"/>
+            </node>
+            <simple-transition/>
+            <node>
+              <end-node name="OK"/>
+              <node-display x="0" y="1"/>
             </node>
           </segment>
         </branch>

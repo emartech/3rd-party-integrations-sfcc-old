@@ -1,7 +1,6 @@
 /**
 *	Export Profile atributes as CSV
 *
-*	@input Profiles : dw.util.Iterator
 *	@input FileName : String
 *	@input Separator : String
 *	@input OptInStatus : Number
@@ -15,12 +14,13 @@
 *
 */
 
-var system   = require("dw/system"),
-	util     = require("dw/util"),
-	customer = require("dw/customer"),
-	object   = require("dw/object"),
-	io       = require("dw/io"),
-	logger   = require("dw/system/Logger");
+var system      = require("dw/system"),
+	util        = require("dw/util"),
+	customer    = require("dw/customer"),
+	object      = require("dw/object"),
+	io          = require("dw/io"),
+	logger      = require("dw/system/Logger"),
+	customerMgr = require('dw/customer/CustomerMgr');
 
 function execute( args : PipelineDictionary ) : Number
 {
@@ -30,11 +30,11 @@ function execute( args : PipelineDictionary ) : Number
 
 	system.Site.current.setCustomPreferenceValue('emarsysFileNameString', FileName);
 
-	var folderPath : String                           = dw.io.File.IMPEX + '/src/'+FolderName,
-		filePath : String                             = folderPath + '/'+ FileName +'.csv',
-		folder : dw.io.File                           = new io.File(folderPath);
-
-
+	var folderPath : String = dw.io.File.IMPEX + '/src/'+FolderName,
+		filePath : String   = folderPath + '/'+ FileName +'.csv',
+		folder : dw.io.File = new io.File(folderPath),
+		currentSiteId       = system.Site.getCurrent().getID();
+	
 	try {
 		var FieldConfigurationCO : dw.object.CustomObject = new object.CustomObjectMgr.getCustomObject("EmarsysDBLoadConfig","dbloadConfig"),
 			FieldConfiguration                            = JSON.parse(FieldConfigurationCO.custom.mappedFields),
@@ -44,9 +44,7 @@ function execute( args : PipelineDictionary ) : Number
 			OptInStatusAttribute : String                 = args.OptInStatusAttribute,
 			CountryValueCodes : String                    = JSON.parse(args.CountryValueCodes),
 			GenderValueCodes : String                     = JSON.parse(args.GenderValueCodes),
-			Profiles                                      = args.Profiles,
 			FieldValueMapping                             = JSON.parse(args.FieldValueMapping);
-
 
 		if(!folder.exists()){
 			folder.mkdirs();
@@ -65,8 +63,15 @@ function execute( args : PipelineDictionary ) : Number
 		var ProfilesExportThreshold = system.Site.getCurrent().getCustomPreferenceValue("emarsysProfilesExportThreshold"),
 			ExportedProfiles = 0;
 
-		for each(var Profile : dw.customer.Profile in Profiles){
-			var ProfileInfo = [];
+        var customExportAttribute = "emarsysExportedProfileFlag" + currentSiteId,
+		    customExportFlag      = "custom.emarsysExportedProfileFlag" + currentSiteId, 
+            query                 = "NOT " + customExportFlag + " LIKE true",
+            Profiles = customerMgr.searchProfiles(query, "creationDate desc");
+
+        while (Profiles.hasNext()) {
+            var Profile = Profiles.next();
+            
+            var ProfileInfo = [];
 
 			if(Profile.addressBook.preferredAddress != null){
 				var Address : dw.customer.CustomerAddress = Profile.addressBook.preferredAddress;
@@ -104,20 +109,21 @@ function execute( args : PipelineDictionary ) : Number
 			exportCSVStreamWriter.writeNext(ProfileInfo);
 
 			ExportedProfiles++;
-			Profile.custom.emarsysExportedProfileFlag = true;
+			
+			Profile.custom[customExportAttribute] = true;
 
 			if(ExportedProfiles == ProfilesExportThreshold) {
 				break;
 			}
-		}
-
-		if(ExportedProfiles < ProfilesExportThreshold) {
+        }
+        
+        if(ExportedProfiles < ProfilesExportThreshold) {
 			system.Site.getCurrent().setCustomPreferenceValue("emarsysDBLoadExportStatus", true);
 			args.ExportStatus = true;
 		}
 
 		return PIPELET_NEXT;
-	} catch (err){
+	} catch (err) {
 		args.ErrorMsg = err.toString();
 		logger.error("[ExportProfilesAsCSV.ds #" + err.lineNumber + "] - ***Emarsys CSV profile data export error message: " + err);
 		return PIPELET_ERROR;
@@ -125,7 +131,9 @@ function execute( args : PipelineDictionary ) : Number
 	} finally {
 		exportCSVStreamWriter.close();
 		exportFileWriter.close();
+        Profiles.close();
 	}
+
 	return PIPELET_NEXT;
 }
 

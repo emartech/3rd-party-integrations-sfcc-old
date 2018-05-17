@@ -25,7 +25,8 @@ function execute( args : PipelineDictionary ) : Number {
         //Retrieve Predict configuration
         predictConfig    = obj.CustomObjectMgr.getCustomObject("EmarsysPredictConfig", "predictConfig"),
         siteLocales      = currentSite.getAllowedLocales(),
-        defaultLocale    = currentSite.getDefaultLocale();
+        defaultLocale    = currentSite.getDefaultLocale(),
+        currenciesMap    = JSON.parse(currentSite.getCustomPreferenceValue("emarsysPredictLocCurMap")); 
 
     try {
         if (!empty(sftpUsername) && !empty(sftpPassword) && !empty(sftpHost) && !empty(siteCatalog) && !empty(predictConfig)) {
@@ -52,11 +53,11 @@ function execute( args : PipelineDictionary ) : Number {
                 if (key.placeholder.indexOf('_multilang') > 0) {
                     for (var i = 0; i < siteLocales.length; i++) {
                         if (siteLocales[i] != 'default') {
-                        	if (siteLocales[i] === defaultLocale) {
-                        		columnNames.push(key.placeholder.replace('_multilang', ''));
-                        	} else {
-                        		columnNames.push(key.placeholder.replace('multilang', siteLocales[i]));
-                        	}
+                            if (siteLocales[i] === defaultLocale) {
+                                columnNames.push(key.placeholder.replace('_multilang', ''));
+                            } else {
+                                columnNames.push(key.placeholder.replace('multilang', siteLocales[i]));
+                            }
                         } else {
                             columnNames.push(key.placeholder.replace('_multilang', ''));
                         }
@@ -78,8 +79,8 @@ function execute( args : PipelineDictionary ) : Number {
                 //Are we exporting all products or master products only?
                 if( (exportType == "master" && product.isMaster()) || (exportType == "variations") ) {
                     var productInfo = [];
-                    emarsysHelper.getProductInfo(mappedFields, product, productInfo, siteLocales, defaultLocale);
-                    
+                    emarsysHelper.getProductInfo(mappedFields, product, productInfo, siteLocales, defaultLocale, currenciesMap);
+
                     //Write product info
                     productInfo.forEach(function(key, val) {
                         writer.writeNext(productInfo[val]);

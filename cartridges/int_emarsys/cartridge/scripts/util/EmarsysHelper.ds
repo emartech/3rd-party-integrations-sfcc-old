@@ -13,7 +13,9 @@ var util         = require("dw/util"),
     priceBookMgr = require("dw/catalog/PriceBookMgr"),
     sftpClient   = require("dw/net/SFTPClient"),
     logger       = require("dw/system/Logger"),
-    io           = require("dw/io");
+    io           = require("dw/io"),
+    Currency     = require('dw/util/Currency'),
+    Locale       = require('dw/util/Locale');
 
 function EmarsysHelper() {
 
@@ -225,9 +227,10 @@ function EmarsysHelper() {
         }
     };
 
-    this.getProductInfo = function (mappedFields, product, dataObject, siteLocales, defaultLocale) {
+    this.getProductInfo = function (mappedFields, product, dataObject, siteLocales, defaultLocale, currenciesMap) {
         if (mappedFields && product && dataObject) {
-            var productInfo = [];
+            var productInfo = [],
+                currency;
 
             for (var j = 0; j < mappedFields.length; j++) {
 
@@ -252,18 +255,28 @@ function EmarsysHelper() {
                                 parsedImage = product.getImage(viewType) !== null ? product.getImage(viewType).getAbsURL().toString() : "";
                             productInfo.push(parsedImage);
                         } else if (splitField[1] == "price") {
-                            var productPrice = product.getPriceModel().getMaxPrice();
 
-                            if(product instanceof dw.catalog.Variant){
-                                productPrice = product.getPriceModel().getPrice();
-                            }
-                            var priceValue = productPrice.getValueOrNull();
+                            for (var localeIndex = 0; localeIndex < siteLocales.length; localeIndex++) {
+                                currency = Currency.getCurrency(currenciesMap[siteLocales[localeIndex]]);
+                                session.setCurrency(currency);
 
-                            if (!empty(priceValue)) {
-                                productInfo.push(priceValue.toFixed(2));
-                            } else {
-                                productInfo.push("");
+                                var productPrice = product.getPriceModel().getMaxPrice();
+
+                                if (product instanceof dw.catalog.Variant) {
+                                    productPrice = product.getPriceModel().getPrice();
+                                }
+
+                                var priceValue = productPrice.getValueOrNull();
+
+                                if (!empty(priceValue)) {
+                                    productInfo.push(priceValue.toFixed(2));
+                                } else {
+                                    productInfo.push("");
+                                }
                             }
+
+                            currency = Currency.getCurrency(currenciesMap[defaultLocale]);
+                            session.setCurrency(currency);
 
                         } else if (splitField[1] == "availability") {
                             productInfo.push(product.getAvailabilityModel().isOrderable());
@@ -279,7 +292,7 @@ function EmarsysHelper() {
 
                             for (var localeIndex = 0; localeIndex < siteLocales.length; localeIndex++) {
                                 var setRequest = siteLocales[localeIndex] === 'default' ? request.setLocale(defaultLocale) : request.setLocale(siteLocales[localeIndex]),
-                                       categories = product.getOnlineCategories().toArray(),
+                                    categories = product.getOnlineCategories().toArray(),
                                     path       = new dw.util.ArrayList(),
                                     pathsArray = new dw.util.ArrayList();
     

@@ -625,6 +625,16 @@
                 <min-length>0</min-length>
                 <default-value>predict</default-value>
             </attribute-definition>
+            <attribute-definition attribute-id="emarsysPredictLocCurMap">
+                <display-name xml:lang="x-default">Map of locales and currencies</display-name>
+                <description xml:lang="x-default">Map of locales and currencies&#13;
+Example: {"default":"USD", "en_US":"USD", "it_IT":"EUR", "en_GB":"GBP"}</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+                <default-value>{"default":"USD", "en_US":"USD", "it_IT":"EUR", "en_GB":"GBP"}</default-value>
+            </attribute-definition>
             <attribute-definition attribute-id="emarsysPredictSFTPHost">
                 <display-name xml:lang="x-default">Emarsys SFTP Host</display-name>
                 <description xml:lang="x-default">Emarsys SFTP Host</description>
@@ -733,6 +743,7 @@
                 <attribute attribute-id="emarsysPredictSFTPPath"/>
                 <attribute attribute-id="emarsysPredictProductAttributes"/>
                 <attribute attribute-id="emarsysPredictVariationAttributes"/>
+                <attribute attribute-id="emarsysPredictLocCurMap"/>
             </attribute-group>
         </group-definitions>
     </type-extension>
