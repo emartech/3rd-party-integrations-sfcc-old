@@ -52,15 +52,17 @@ function execute( args : PipelineDictionary ) : Number {
             mappedFields.forEach(function(key, val) {
                 if (key.placeholder.indexOf('_multilang') > 0) {
                     for (var i = 0; i < siteLocales.length; i++) {
-                        if (siteLocales[i] != 'default') {
-                            if (siteLocales[i] === defaultLocale) {
-                                columnNames.push(key.placeholder.replace('_multilang', ''));
+                        if (currenciesMap[siteLocales[i]]) {
+                            if (siteLocales[i] != 'default') {
+                                if (siteLocales[i] === defaultLocale) {
+                                    columnNames.push(key.placeholder.replace('_multilang', ''));
+                                } else {
+                                    columnNames.push(key.placeholder.replace('multilang', siteLocales[i]));
+                                }
                             } else {
-                                columnNames.push(key.placeholder.replace('multilang', siteLocales[i]));
+                                columnNames.push(key.placeholder.replace('_multilang', ''));
                             }
-                        } else {
-                            columnNames.push(key.placeholder.replace('_multilang', ''));
-                        }
+                    	}
                     }
                 } else {
                     columnNames.push(key.placeholder);

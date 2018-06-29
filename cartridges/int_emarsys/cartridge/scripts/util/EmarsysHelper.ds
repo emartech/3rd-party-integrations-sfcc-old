@@ -229,7 +229,8 @@ function EmarsysHelper() {
 
     this.getProductInfo = function (mappedFields, product, dataObject, siteLocales, defaultLocale, currenciesMap) {
         if (mappedFields && product && dataObject) {
-            var productInfo = [],
+            var productInfo         = [],
+                defaultSiteCurrency = session.currency.currencyCode,
                 currency;
 
             for (var j = 0; j < mappedFields.length; j++) {
@@ -244,9 +245,11 @@ function EmarsysHelper() {
                         if (splitField[1] == "url") {
 
                             for (var localeIndex = 0; localeIndex < siteLocales.length; localeIndex++) {
-                                var setRequest = siteLocales[localeIndex] === 'default' ? request.setLocale(defaultLocale) : request.setLocale(siteLocales[localeIndex]),
-                                    url        = this.returnProductURL(product);
-                                productInfo.push(url.toString());
+                                if (currenciesMap[siteLocales[localeIndex]]) {
+                                    var setRequest = siteLocales[localeIndex] === 'default' ? request.setLocale(defaultLocale) : request.setLocale(siteLocales[localeIndex]),
+                                        url        = this.returnProductURL(product);
+                                    productInfo.push(url.toString());
+                                }
                             }
                             var setRequest = request.setLocale(defaultLocale);
 
@@ -257,67 +260,73 @@ function EmarsysHelper() {
                         } else if (splitField[1] == "price") {
 
                             for (var localeIndex = 0; localeIndex < siteLocales.length; localeIndex++) {
-                                currency = Currency.getCurrency(currenciesMap[siteLocales[localeIndex]]);
-                                session.setCurrency(currency);
+                                if (currenciesMap[siteLocales[localeIndex]]) {
+                                    currency = Currency.getCurrency(currenciesMap[siteLocales[localeIndex]]);
+                                    session.setCurrency(currency);
 
-                                var productPrice = product.getPriceModel().getMaxPrice();
+                                    var productPrice = product.getPriceModel().getMaxPrice();
 
-                                if (product instanceof dw.catalog.Variant) {
-                                    productPrice = product.getPriceModel().getPrice();
-                                }
+                                    if (product instanceof dw.catalog.Variant) {
+                                        productPrice = product.getPriceModel().getPrice();
+                                    }
 
-                                var priceValue = productPrice.getValueOrNull();
+                                    var priceValue = productPrice.getValueOrNull();
 
-                                if (!empty(priceValue)) {
-                                    productInfo.push(priceValue.toFixed(2));
-                                } else {
-                                    productInfo.push("");
+                                    if (!empty(priceValue)) {
+                                        productInfo.push(priceValue.toFixed(2));
+                                    } else {
+                                        productInfo.push("");
+                                    }
+
+                                    currency = Currency.getCurrency(defaultSiteCurrency);
+                                    session.setCurrency(currency);
                                 }
                             }
-
-                            currency = Currency.getCurrency(currenciesMap[defaultLocale]);
-                            session.setCurrency(currency);
 
                         } else if (splitField[1] == "availability") {
                             productInfo.push(product.getAvailabilityModel().isOrderable());
                         } else if (splitField[1] == "name") {
 
                             for (var localeIndex = 0; localeIndex < siteLocales.length; localeIndex++) {
-                                var setRequest = siteLocales[localeIndex] === 'default' ? request.setLocale(defaultLocale) : request.setLocale(siteLocales[localeIndex]);
-                                productInfo.push(product.getName());
+                                if (currenciesMap[siteLocales[localeIndex]]) {
+                            	    var setRequest = siteLocales[localeIndex] === 'default' ? request.setLocale(defaultLocale) : request.setLocale(siteLocales[localeIndex]);
+                                    productInfo.push(product.getName());
+                                }
                             }
                             var setRequest = request.setLocale(defaultLocale);
 
                         } else if (splitField[1] == "categories") {
 
                             for (var localeIndex = 0; localeIndex < siteLocales.length; localeIndex++) {
-                                var setRequest = siteLocales[localeIndex] === 'default' ? request.setLocale(defaultLocale) : request.setLocale(siteLocales[localeIndex]),
-                                    categories = product.getOnlineCategories().toArray(),
-                                    path       = new dw.util.ArrayList(),
-                                    pathsArray = new dw.util.ArrayList();
-    
-                                if (product instanceof dw.catalog.Variant) {
-                                    categories = product.masterProduct.getOnlineCategories().toArray();
-                                }
-                                var category;
-    
-                                if (categories.length > 0) {
-                                    for (var i = 0; i < categories.length; i++) {
-                                        category = categories[i];
-                                        path = new dw.util.ArrayList();
-                                        // find the path for each of the categories
-                                        while( category.parent != null )
-                                        {
-                                            if( category.online ) path.addAt( 0, category.displayName );
-                                            category = category.parent;
-                                        }
-                                        pathsArray.push(path.join(" > "));
-                                    }
-                                    // push all the categories separated by |
-                                    productInfo.push(pathsArray.join("|"));
-                                } else {
-                                    productInfo.push('');
-                                }
+                            	if (currenciesMap[siteLocales[localeIndex]]) {
+                            		var setRequest = siteLocales[localeIndex] === 'default' ? request.setLocale(defaultLocale) : request.setLocale(siteLocales[localeIndex]),
+	                                    categories = product.getOnlineCategories().toArray(),
+	                                    path       = new dw.util.ArrayList(),
+	                                    pathsArray = new dw.util.ArrayList();
+	    
+	                                if (product instanceof dw.catalog.Variant) {
+	                                    categories = product.masterProduct.getOnlineCategories().toArray();
+	                                }
+	                                var category;
+	    
+	                                if (categories.length > 0) {
+	                                    for (var i = 0; i < categories.length; i++) {
+	                                        category = categories[i];
+	                                        path = new dw.util.ArrayList();
+	                                        // find the path for each of the categories
+	                                        while( category.parent != null )
+	                                        {
+	                                            if( category.online ) path.addAt( 0, category.displayName );
+	                                            category = category.parent;
+	                                        }
+	                                        pathsArray.push(path.join(" > "));
+	                                    }
+	                                    // push all the categories separated by |
+	                                    productInfo.push(pathsArray.join("|"));
+	                                } else {
+	                                    productInfo.push('');
+	                                }
+                            	}
                             }
                             var setRequest = request.setLocale(defaultLocale);
 
