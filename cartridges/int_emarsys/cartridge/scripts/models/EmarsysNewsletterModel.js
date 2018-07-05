@@ -38,31 +38,21 @@ EmarsysNewsletter.getCustomerData = function(args) {
         dataFields;	// object to read data from
 
     try {
-        if (args.Basket) {
-            if (args.Basket.billingAddress) {
-                dataFields = args.Basket.billingAddress;
-            } else if (args.Basket.shipments[0].shippingAddress) {
-                dataFields = args.Basket.shipments[0].shippingAddress;
+        if (args.basket) {
+            if (args.basket.billingAddress) {
+                emarsysHelper.addDataToMap(args.basket.billingAddress, map);
+            } else if (args.basket.shipments[0].shippingAddress) {
+                emarsysHelper.addDataToMap(args.basket.shipments[0].shippingAddress, map);
             }
-        }
+        } else if (customer.authenticated) {
+            var customerAddressData = customer.addressBook;
 
-        // if no billing or shipping address available get data from profile if customer authenticated
-        if (dataFields) {
-            emarsysHelper.addDataToMap(dataFields, map);
-        } else {
-            if (customer.authenticated) {
-                var customerAddressData = customer.addressBook;
-                if ("preferredAddress" in customerAddressData && !empty(customerAddressData.preferredAddress)) {
-                    dataFields = customerAddressData.preferredAddress;
-                } else if (customerAddressData.addresses && customerAddressData.addresses.length > 0) {
-                    dataFields = customerAddressData.addresses[0];
+            for (var i = 0; i < customerAddressData.addresses.length; i++) {
+                if (i == 0) {
+                    emarsysHelper.addDataToMap(customerAddressData.addresses[i], map);
                 } else {
-                    dataFields = customer.profile;
+                    emarsysHelper.addAddressDataToMap(customerAddressData.addresses[i], map, i);
                 }
-            }
-
-            if (dataFields) {
-                emarsysHelper.addDataToMap(dataFields, map);
             }
         }
 

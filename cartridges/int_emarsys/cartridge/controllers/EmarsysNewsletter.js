@@ -147,8 +147,7 @@ function checkoutSubscription() {
 
 function footerSubscription() {
     var args = {};
-    var emarsysEnabled = dw.system.Site.getCurrent().getCustomPreferenceValue("emarsysEnabled");
-    if(!empty(emarsysEnabled) && emarsysEnabled) {
+    if (dw.system.Site.getCurrent().getCustomPreferenceValue("emarsysEnabled")) {
         args.SubscriptionType  = "footer";
         args.Email             = request.httpParameterMap.emailAddress.value;
         args.SubscribeToEmails = true;
