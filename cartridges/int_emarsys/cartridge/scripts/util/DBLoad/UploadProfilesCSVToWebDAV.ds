@@ -20,10 +20,12 @@ function execute( args : PipelineDictionary ) : Number
         var URL : String      = args.URL,
             Username : String = args.Username,
             Password : String = args.Password;
+	
+	var emarsysHelper : Object = new (require("./../../util/EmarsysHelper"))();
 
         var CSVFileName : String   = args.FileName,
             CSVFolderName : String = args.FolderName,
-            CSVFilePath : String   = dw.io.File.IMPEX + '/src/'+ CSVFolderName + '/' + CSVFileName + '.csv',
+            CSVFilePath : String   = dw.io.File.IMPEX + '/src/'+ CSVFolderName + '/' + CSVFileName + '_' + emarsysHelper.formatDate(new Date()) + '.csv',
             CSVFile : dw.io.File   = new io.File(CSVFilePath);
 
         var WebDAVFilePath = '/'+ CSVFileName +'.csv',
