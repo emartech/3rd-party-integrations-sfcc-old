@@ -5,21 +5,6 @@
         ScarabQueue.push(['availabilityZone', '<isprint value="${request.locale}" encoding="off" />']);
     </script>
 
-    <iscomment>Information used to identify customer</iscomment>
-    <iscomment>
-    <isif condition="${customer.authenticated && customer.registered}">
-        <isif condition="${!empty(customer.profile.email)}">
-            <script type="text/javascript">
-                ScarabQueue.push(['setEmail', '<isprint value="${customer.profile.email}" encoding="off" />']);
-            </script>
-        <iselse>
-            <script type="text/javascript">
-                ScarabQueue.push(['setCustomerId', '<isprint value="${customer.profile.customerNo}" encoding="off" />']);
-            </script>
-        </isif>
-    </isif>
-    </iscomment>
-
     <iscomment>Cart information availabe on page load</iscomment>
     <isinclude url="${URLUtils.url('Predict-GetCartInfo')}"/>
 

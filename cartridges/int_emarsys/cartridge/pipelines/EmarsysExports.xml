@@ -28,7 +28,7 @@
           <config-property key="Transactional" value="false"/>
           <config-property key="OnError" value="PIPELET_ERROR"/>
           <config-property key="ScriptFile" value="predict/ExportCatalogJob.ds"/>
-          <config-property key="Timeout" value="1800"/>
+          <config-property key="Timeout" value="3600"/>
           <key-binding alias="Log" key="ScriptLog"/>
           <key-binding alias="ErrorMsg" key="ErrorMsg"/>
         </pipelet-node>
