@@ -62,7 +62,7 @@ function execute( args : PipelineDictionary ) : Number {
                             } else {
                                 columnNames.push(key.placeholder.replace('_multilang', ''));
                             }
-                    	}
+                        }
                     }
                 } else {
                     columnNames.push(key.placeholder);
@@ -90,6 +90,11 @@ function execute( args : PipelineDictionary ) : Number {
                 }
             }
 
+            //Clear resources
+            products.close();
+            writer.close();
+            fileWriter.close();
+
             //Upload to SFTP
             var sftp = new net.SFTPClient(),
                 connectionStatus = sftp.connect(sftpHost, sftpUsername, sftpPassword);
@@ -112,9 +117,6 @@ function execute( args : PipelineDictionary ) : Number {
             }
 
             //Clear resources
-            products.close();
-            writer.close();
-            fileWriter.close();
             sftp.disconnect();
 
         } else {
@@ -126,6 +128,7 @@ function execute( args : PipelineDictionary ) : Number {
     } catch (err) {
         system.Logger.error("[predict/ExportCatalogJob.ds #" + err.lineNumber + "] - ***Emarsys Predict catalog job export error: " + err);
         args.ErrorMsg = err.toString();
+
         return PIPELET_ERROR;
     }
 
