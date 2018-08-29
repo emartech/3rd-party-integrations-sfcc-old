@@ -153,8 +153,30 @@ function EmarsysHelper() {
         }
     };
 
+ /**
+     * Method adds Address object's specified keys' values to map object which is used to populate request body sent to emarsys
+     * @param {Object} object Object to retrieve data from
+     * @param {Object} map Object to add data to
+     * @param {Int} i Int address counter
+     */
+    this.addAddressDataToMap = function(object, map, i) {
+        var emarsysIdsMap = JSON.parse(dw.system.Site.current.preferences.custom.emarsysAddressFieldsMap);
 
+        for each (var key in Object.keys(emarsysIdsMap[i])) {
+            var attribute = emarsysIdsMap[i][key],
+                value     = null;
 
+            value = this.getValues(attribute, object, 0);
+
+            if (typeof(value) == 'object') {
+                value = value.value;
+            }
+
+            if (value) {
+                map[key] = value;
+            }
+        }
+    };
 
     this.escapeCSVField = function (field) {
         field = field ? field.toString().replace(/"/g, '\"\"') : "";
