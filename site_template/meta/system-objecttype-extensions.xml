@@ -1,31 +1,7 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <metadata xmlns="http://www.demandware.com/xml/impex/metadata/2006-10-31">
-    <type-extension type-id="Profile">
-        <custom-attribute-definitions>
-            <attribute-definition attribute-id="emarsysExportedProfileFlag">
-                <display-name xml:lang="x-default">Emarsys: Profile export flag</display-name>
-                <description xml:lang="x-default">Used for CSV exports</description>
-                <type>boolean</type>
-                <mandatory-flag>false</mandatory-flag>
-                <externally-managed-flag>false</externally-managed-flag>
-            </attribute-definition>
-        </custom-attribute-definitions>
-        <group-definitions>
-            <attribute-group group-id="EmarsysProfileFlags">
-                <display-name xml:lang="x-default">Emarsys Profile Flags</display-name>
-                <attribute attribute-id="emarsysExportedProfileFlag"/>
-            </attribute-group>
-        </group-definitions>
-    </type-extension>
     <type-extension type-id="Order">
         <custom-attribute-definitions>
-            <attribute-definition attribute-id="emailSent">
-                <display-name xml:lang="x-default">Email Sent</display-name>
-                <description xml:lang="x-default">Check if confirmation email was already sent to customer.</description>
-                <type>boolean</type>
-                <mandatory-flag>false</mandatory-flag>
-                <externally-managed-flag>false</externally-managed-flag>
-            </attribute-definition>
             <attribute-definition attribute-id="emarsysShippingEmailSent">
                 <display-name xml:lang="x-default">Emarsys Shipping Email Sent</display-name>
                 <description xml:lang="x-default">Automatically marked as true after the shipping confirmation email is sent by Emarsys</description>
@@ -53,6 +29,24 @@
                 <attribute attribute-id="sendEmarsysShippingEmail"/>
                 <attribute attribute-id="emarsysShippingEmailSent"/>
                 <attribute attribute-id="exported"/>
+            </attribute-group>
+        </group-definitions>
+    </type-extension>
+
+    <type-extension type-id="Profile">
+        <custom-attribute-definitions>
+            <attribute-definition attribute-id="emarsysExportedProfileFlag">
+                <display-name xml:lang="x-default">Emarsys: Profile export flag</display-name>
+                <description xml:lang="x-default">Used for CSV exports</description>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+        </custom-attribute-definitions>
+        <group-definitions>
+            <attribute-group group-id="EmarsysProfileFlags">
+                <display-name xml:lang="x-default">Emarsys Profile Flags</display-name>
+                <attribute attribute-id="emarsysExportedProfileFlag"/>
             </attribute-group>
         </group-definitions>
     </type-extension>
@@ -277,7 +271,7 @@
                 <mandatory-flag>false</mandatory-flag>
                 <externally-managed-flag>false</externally-managed-flag>
                 <value-definitions>
-                    <value-definition>
+                    <value-definition default="true">
                         <display xml:lang="x-default">Disable widget on this page</display>
                         <value>disable</value>
                     </value-definition>
@@ -289,7 +283,7 @@
                         <display xml:lang="x-default">TOPICAL</display>
                         <value>TOPICAL</value>
                     </value-definition>
-                    <value-definition default="true">
+                    <value-definition>
                         <display xml:lang="x-default">CART</display>
                         <value>CART</value>
                     </value-definition>
@@ -302,7 +296,7 @@
                 <mandatory-flag>false</mandatory-flag>
                 <externally-managed-flag>false</externally-managed-flag>
                 <value-definitions>
-                    <value-definition>
+                    <value-definition default="true">
                         <display xml:lang="x-default">Disable widget on this page</display>
                         <value>disable</value>
                     </value-definition>
@@ -314,7 +308,7 @@
                         <display xml:lang="x-default">TOPICAL</display>
                         <value>TOPICAL</value>
                     </value-definition>
-                    <value-definition default="true">
+                    <value-definition>
                         <display xml:lang="x-default">CATEGORY</display>
                         <value>CATEGORY</value>
                     </value-definition>
@@ -335,11 +329,11 @@
                 <mandatory-flag>false</mandatory-flag>
                 <externally-managed-flag>false</externally-managed-flag>
                 <value-definitions>
-                    <value-definition>
+                    <value-definition default="true">
                         <display xml:lang="x-default">Disable widget on this page</display>
                         <value>disable</value>
                     </value-definition>
-                    <value-definition default="true">
+                    <value-definition>
                         <display xml:lang="x-default">PERSONAL</display>
                         <value>PERSONAL</value>
                     </value-definition>
@@ -383,7 +377,7 @@ Example: {"default":"USD", "en_US":"USD", "it_IT":"EUR", "en_GB":"GBP"}</descrip
                 <mandatory-flag>false</mandatory-flag>
                 <externally-managed-flag>false</externally-managed-flag>
                 <value-definitions>
-                    <value-definition>
+                    <value-definition default="true">
                         <display xml:lang="x-default">Disable widget on this page</display>
                         <value>disable</value>
                     </value-definition>
@@ -395,7 +389,7 @@ Example: {"default":"USD", "en_US":"USD", "it_IT":"EUR", "en_GB":"GBP"}</descrip
                         <display xml:lang="x-default">TOPICAL</display>
                         <value>TOPICAL</value>
                     </value-definition>
-                    <value-definition default="true">
+                    <value-definition>
                         <display xml:lang="x-default">RELATED</display>
                         <value>RELATED</value>
                     </value-definition>
@@ -450,21 +444,21 @@ Example: {"default":"USD", "en_US":"USD", "it_IT":"EUR", "en_GB":"GBP"}</descrip
                 <mandatory-flag>false</mandatory-flag>
                 <externally-managed-flag>false</externally-managed-flag>
                 <value-definitions>
+                    <value-definition default="true">
+                        <display xml:lang="x-default">Disable widget on this page</display>
+                        <value>disable</value>
+                    </value-definition>
                     <value-definition>
                         <display xml:lang="x-default">PERSONAL</display>
                         <value>PERSONAL</value>
                     </value-definition>
-                    <value-definition default="true">
+                    <value-definition>
                         <display xml:lang="x-default">TOPICAL</display>
                         <value>TOPICAL</value>
                     </value-definition>
                     <value-definition>
                         <display xml:lang="x-default">CATEGORY</display>
                         <value>CATEGORY</value>
-                    </value-definition>
-                    <value-definition>
-                        <display xml:lang="x-default">Disable widget on this page</display>
-                        <value>disable</value>
                     </value-definition>
                 </value-definitions>
             </attribute-definition>
@@ -475,17 +469,17 @@ Example: {"default":"USD", "en_US":"USD", "it_IT":"EUR", "en_GB":"GBP"}</descrip
                 <mandatory-flag>false</mandatory-flag>
                 <externally-managed-flag>false</externally-managed-flag>
                 <value-definitions>
+                    <value-definition default="true">
+                        <display xml:lang="x-default">Disable widget on this page</display>
+                        <value>disable</value>
+                    </value-definition>
                     <value-definition>
                         <display xml:lang="x-default">PERSONAL</display>
                         <value>PERSONAL</value>
                     </value-definition>
-                    <value-definition default="true">
+                    <value-definition>
                         <display xml:lang="x-default">TOPICAL</display>
                         <value>TOPICAL</value>
-                    </value-definition>
-                    <value-definition>
-                        <display xml:lang="x-default">Disable widget on this page</display>
-                        <value>disable</value>
                     </value-definition>
                 </value-definitions>
             </attribute-definition>
@@ -514,6 +508,10 @@ Example: {"default":"USD", "en_US":"USD", "it_IT":"EUR", "en_GB":"GBP"}</descrip
                     <value-definition>
                         <display xml:lang="x-default">large</display>
                         <value>large</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">hi-res</display>
+                        <value>hi-res</value>
                     </value-definition>
                 </value-definitions>
             </attribute-definition>
@@ -584,6 +582,15 @@ Example: {"default":"USD", "en_US":"USD", "it_IT":"EUR", "en_GB":"GBP"}</descrip
                 <type>set-of-string</type>
                 <mandatory-flag>false</mandatory-flag>
                 <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="emarsysSmartInsightCurrency">
+                <display-name xml:lang="x-default">Smart Insight currency</display-name>
+                <description xml:lang="x-default">Mnemonic currency code of the currency that is configured for the Smart Insight.</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+                <default-value>USD</default-value>
             </attribute-definition>
             <attribute-definition attribute-id="emarsysSmartInsightDestinationFolder">
                 <display-name xml:lang="x-default">SmartInsight destination folder</display-name>
@@ -708,6 +715,7 @@ Example: {"default":"USD", "en_US":"USD", "it_IT":"EUR", "en_GB":"GBP"}</descrip
                 <attribute attribute-id="emarsysSmartInsightTimeframeStart"/>
                 <attribute attribute-id="emarsysSmartInsightTimeframeEnd"/>
                 <attribute attribute-id="emarsysSmartInsightAvailableElements"/>
+                <attribute attribute-id="emarsysSmartInsightCurrency"/>
             </attribute-group>
             <attribute-group group-id="EmarsysDBInitConfiguration">
                 <display-name xml:lang="x-default">Emarsys DB Init Configuration</display-name>
@@ -755,4 +763,5 @@ Example: {"default":"USD", "en_US":"USD", "it_IT":"EUR", "en_GB":"GBP"}</descrip
             </attribute-group>
         </group-definitions>
     </type-extension>
+
 </metadata>

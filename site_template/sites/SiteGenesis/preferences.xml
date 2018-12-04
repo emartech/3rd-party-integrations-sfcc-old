@@ -356,7 +356,7 @@
 				<value>item</value>
 				<value>quantity</value>
 				<value>date</value>
-				<value>c_sales_amount</value>
+				<value>price</value>
 				<value>custom.lineItem.shipment.shippingAddress.address1</value>
 				<value>custom.lineItem.shipment.shippingAddress.countryCode</value>
 				<value>custom.lineItem.shipment.trackingNumber</value>

@@ -7,31 +7,36 @@
  *
  */
 
-var calendar = require('dw/util/Calendar'),
-    systemObjectMgr = require('dw/object/SystemObjectMgr'),
-    customObjectMgr = require("dw/object/CustomObjectMgr"),
-    orderMgr = require('dw/order/OrderMgr'),
-    logger = require("dw/system/Logger"),
-    io = require("dw/io"),
-    transaction = require("dw/system/Transaction"),
-    util   = require('dw/util'),
-    system = require('dw/system');
+var Site            = require('dw/system/Site'),
+    currentSite     = Site.getCurrent(),
+    Calendar        = require('dw/util/Calendar'),
+    CustomObjectMgr = require('dw/object/CustomObjectMgr'),
+    OrderMgr        = require('dw/order/OrderMgr'),
+    Logger          = require('dw/system/Logger'),
+    FileWriter      = require('dw/io/FileWriter'),
+    CSVStreamWriter = require('dw/io/CSVStreamWriter'),
+    Transaction     = require('dw/system/Transaction'),
+    StringUtils     = require('dw/util/StringUtils'),
+    Currency        = require('dw/util/Currency');
 
 function execute(args) {
-    var emarsysHelper = new (require("./../util/EmarsysHelper"))(),
-        exportOrders = system.Site.current.preferences.custom.emarsysSmartInsightOptIn,
-        enableCustomTimeFrame = system.Site.current.preferences.custom.emarsysEnableSmartInsightTimeframe,
-        startDate = null,    // start date for export timeframe
-        endDate = null,        // end date for export timeframe
-        destinationFolder = system.Site.current.preferences.custom.emarsysSmartInsightDestinationFolder,
-        fileName = emarsysHelper.createSmartInsightFeedName(),
-        exportFile = emarsysHelper.createSmartInsightExportFile(),
-        feedContent = '',
-        feedLines = [],
-        separator = ',',
-        day = 24 * 60 * 60 * 1000,    // 24hrs in millis
-        today = new Date(),
-        yesterday = new Date(today);
+    var emarsysHelper          = new (require("./../util/EmarsysHelper"))(),
+        sitePreferences        = currentSite.getPreferences(),
+        defaultRequestCurrency = session.currency.currencyCode,
+        exportOrders           = sitePreferences.custom['emarsysSmartInsightOptIn'],
+        enableCustomTimeFrame  = sitePreferences.custom['emarsysEnableSmartInsightTimeframe'],
+        timeframeStart         = sitePreferences.custom['emarsysSmartInsightTimeframeStart'],
+        timeframeEnd           = sitePreferences.custom['emarsysSmartInsightTimeframeEnd'],
+        destinationFolder      = sitePreferences.custom['emarsysSmartInsightDestinationFolder'],
+        currencyToConvert      = sitePreferences.custom['emarsysSmartInsightCurrency'],
+        fileName               = emarsysHelper.createSmartInsightFeedName(),
+        exportFile             = emarsysHelper.createSmartInsightExportFile(),
+        feedContent            = '',
+        feedLines              = [],
+        separator              = ',',
+        day                    = 24 * 60 * 60 * 1000,    // 24hrs in millis
+        today                  = new Date(),
+        yesterday              = new Date(today);
 
     // subtract number of milliseconds in 24h from today presentation im millis as well and create a new date with it
     yesterday = new Date(yesterday.setTime(yesterday.getTime() - day));
@@ -41,13 +46,13 @@ function execute(args) {
         return PIPELET_NEXT;
     }
 
-    var co = customObjectMgr.getCustomObject('EmarsysSmartInsightConfiguration', 'emarsysSmartInsight'),
+    var co          = CustomObjectMgr.getCustomObject('EmarsysSmartInsightConfiguration', 'emarsysSmartInsight'),
         columnNames = [],    // names of columns in created feed
-        attributes = [];    // attributes to read values from
+        attributes  = [];    // attributes to read values from
 
     // throw error when can't load config
     if (!co) {
-        logger.error('[ExportOrders.ds] - *** Error occurred during reading SmartInsight stored fields mapping.');
+        Logger.error('[ExportOrders.ds] - *** Error occurred during reading SmartInsight stored fields mapping.');
         return PIPELET_ERROR;
     }
 
@@ -56,8 +61,9 @@ function execute(args) {
 
     if (mappedFields.length > 0) {
         for (var i = 0; i < mappedFields.length; i++) {
-            var placeholder = mappedFields[i].placeholder;
-            var columnName = emarsysHelper.escapeCSVField(placeholder);
+            var placeholder = mappedFields[i].placeholder,
+                columnName  = emarsysHelper.escapeCSVField(placeholder);
+
             columnNames.push(columnName);
             attributes.push(mappedFields[i].field);
         }
@@ -65,50 +71,57 @@ function execute(args) {
 
     if (columnNames.length > 0) {
         var titleLine = columnNames.join(separator);
+
         feedLines.push(titleLine);
     }
 
-    startDate = enableCustomTimeFrame ? system.Site.current.preferences.custom.emarsysSmartInsightTimeframeStart : yesterday;
-    endDate = enableCustomTimeFrame ? system.Site.current.preferences.custom.emarsysSmartInsightTimeframeEnd : today;
-    
+    // start date for export timeframe
+    var startDate = enableCustomTimeFrame ? timeframeStart : yesterday;
+    // end date for export timeframe
+    var endDate = enableCustomTimeFrame ? timeframeEnd : today;
+
     // create CSV
-    var fileWriter = new io.FileWriter(exportFile, "utf-8"),
-    writer = new io.CSVStreamWriter(fileWriter, ',', '"');
-    
+    var fileWriter = new FileWriter(exportFile, "utf-8"),
+        writer     = new CSVStreamWriter(fileWriter, ',', '"');
+
     // write CSV header
     writer.writeNext(columnNames);
-    
-    var ORDER_BY = "creationDate desc";
-    var query = "creationDate >= {0} AND creationDate <= {1}";
+
+    var ORDER_BY = "creationDate desc",
+        query    = "creationDate >= {0} AND creationDate <= {1}";
     if (!enableCustomTimeFrame) {
         query += " AND (custom.exported = NULL OR custom.exported = false)";
     }
-    
-    var allOrders = orderMgr.searchOrders(query, ORDER_BY, startDate, endDate);
+
+    var allOrders = OrderMgr.searchOrders(query, ORDER_BY, startDate, endDate);
 
     // start writing csv
     while (allOrders.hasNext()) {
         var order = allOrders.next();
 
-        transaction.begin();
+        Transaction.begin();
         try {
-            var value = null, // escaped value
-                origValue = ''; // non escaped value
-            var lineItems = [];
+            var value     = null, // escaped value
+                origValue = '',   // non escaped value
+                lineItems = [];
 
             // if list of columns for feed is empty
             if (!columnNames.length) {
                 continue;
             }
+
             lineItems = Array.prototype.concat(
                 order.getAllProductLineItems().toArray(),
                 order.getGiftCertificateLineItems().toArray()
             );
+            
             lineItems.forEach(function (lineItem) {
                 var feedLine = [];    // list of attr values in a feed line
+
                 attributes.forEach(function (attribute) {
-                    origValue = renderAttributeValue(attribute, order, lineItem);
-                    value = emarsysHelper.escapeCSVField(origValue);
+                    origValue = renderAttributeValue(attribute, order, lineItem, currencyToConvert, defaultRequestCurrency);
+                    value     = emarsysHelper.escapeCSVField(origValue);
+
                     feedLine.push(value);
                 });
 
@@ -119,10 +132,12 @@ function execute(args) {
 
             // set order as exported
             order.custom.exported = true;
-            transaction.commit();
+            Transaction.commit();
+
         } catch (err) {
-            transaction.rollback();
-            logger.error("[ExportOrders.ds #" + err.lineNumber + "] - *** Export data error: " + err);
+            Transaction.rollback();
+            Logger.error("[ExportOrders.ds #" + err.lineNumber + "] - *** Export data error: " + err);
+
             return PIPELET_ERROR;
         }
     }
@@ -134,10 +149,10 @@ function execute(args) {
     try {
         emarsysHelper.putDataToSFTP(exportFile, destinationFolder, fileName);
     } catch (err) {
-        logger.error("[ExportOrders.ds #]" + err.lineNumber + "] - *** Send data error: " + err);
+        Logger.error("[ExportOrders.ds #]" + err.lineNumber + "] - *** Send data error: " + err);
+
         return PIPELET_ERROR;
     }
-
 
     return PIPELET_NEXT;
 }
@@ -149,7 +164,7 @@ function execute(args) {
  * @param lineItem
  * @returns {*}
  */
-function renderAttributeValue(attributesChain, order, lineItem) {
+function renderAttributeValue(attributesChain, order, lineItem, currencyToConvert, defaultRequestCurrency) {
     var attributes = attributesChain.split('.');
     switch (attributes[0]) {
         /*
@@ -162,7 +177,7 @@ function renderAttributeValue(attributesChain, order, lineItem) {
          Render order creation date
          */
         case 'date':
-            return dw.util.StringUtils.formatCalendar(new calendar(order.creationDate), "YYYY-MM-dd");
+            return StringUtils.formatCalendar(new Calendar(order.creationDate), "YYYY-MM-dd");
             break;
         /*
          Render customer email
@@ -197,8 +212,8 @@ function renderAttributeValue(attributesChain, order, lineItem) {
         /*
          Render item price
          */
-        case 'c_sales_amount':
-            var price = getPrice(lineItem);
+        case 'price':
+            var price = getPrice(lineItem, order, currencyToConvert, defaultRequestCurrency);
             if (order.status.value == order.ORDER_STATUS_CANCELLED) {
                 price = -price;
             }
@@ -279,22 +294,57 @@ function getQuantity(lineItem) {
  * @param lineItem
  * @returns {*}
  */
-function getPrice(lineItem) {
+function getPrice(lineItem, order, currencyToConvert, defaultRequestCurrency) { 
     switch (true) {
         case lineItem instanceof dw.order.ProductLineItem:
-            var priceValue = lineItem.getProratedPrice().getValueOrNull();
-            if (!empty(priceValue)) {
-                return priceValue.toFixed(2);
+
+            var defaultSiteCurrency = session.currency.currencyCode,
+                orderCurrencyCode   = order.getCurrencyCode(),
+                currency;
+
+            if (currencyToConvert === orderCurrencyCode) {
+                var priceValue = lineItem.getProratedPrice().getValueOrNull();
+                
+                if (!empty(priceValue)) {
+                    return priceValue.toFixed(2);
+                } else {
+                    return null;
+                }
             } else {
-                return null;
+                var priceValue = lineItem.getProratedPrice().getValueOrNull();
+
+                currency = Currency.getCurrency(orderCurrencyCode);
+                session.setCurrency(currency);
+                var priceInOrderCurrency = lineItem.getProduct().getPriceModel().getPrice();
+
+                currency = Currency.getCurrency(currencyToConvert);
+                session.setCurrency(currency);
+                var priceInCurrencyToConvert = lineItem.getProduct().getPriceModel().getPrice();
+
+                var ratio = priceInCurrencyToConvert.getValue() / priceInOrderCurrency.getValue();
+
+                var convertedPrice = new Number(priceValue * ratio).toFixed(2); 
+
+                if (!empty(priceValue)) {
+                    currency = Currency.getCurrency(defaultRequestCurrency);
+                    session.setCurrency(currency);
+                    return convertedPrice;
+                } else {
+                    currency = Currency.getCurrency(defaultRequestCurrency);
+                    session.setCurrency(currency);
+                    return null;
+                }
             }
+        
         case lineItem instanceof dw.order.GiftCertificateLineItem:
             var priceValue = lineItem.getPrice().getValueOrNull();
+
             if (!empty(priceValue)) {
                 return priceValue.toFixed(2);
             } else {
                 return null;
             }
+
         default:
             return null;
     }

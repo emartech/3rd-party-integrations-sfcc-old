@@ -231,10 +231,12 @@ function EmarsysHelper() {
             if (attributes instanceof dw.value.Money) {
                 attributes = attributes.getValueOrNull() || '0';
             }
+
             //23.10.18 : fix g.h. : Date Attribute for order.creationDate is wrong.
-	    if (attributes instanceof Date) {
+            if (attributes instanceof Date) {
                 attributes = this.formatDate(attributes, '-', ':');
             }
+
             try{
                 if (typeof(attributes) == 'object') {
                     attributes = attributes.value;
@@ -244,7 +246,6 @@ function EmarsysHelper() {
             } catch(e){
                 attributes = attributes || '';
             }
-
 
             return attributes;
         }
