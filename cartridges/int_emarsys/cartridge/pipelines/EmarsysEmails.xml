@@ -35,17 +35,11 @@
               </pipelet-node>
               <node-display x="0" y="1"/>
               <branch basename="b2" source-connector="error">
-                <transition target-connector="in">
+                <transition target-connector="in1" target-path="../+1">
                   <transition-display>
                     <bend-point relative-to="source" x="1" y="0"/>
                   </transition-display>
                 </transition>
-                <segment>
-                  <node>
-                    <stop-node name="ERROR"/>
-                    <node-display orientation="horizontal" x="1" y="0"/>
-                  </node>
-                </segment>
               </branch>
             </node>
             <transition target-connector="in1" target-path="../+1"/>
@@ -54,8 +48,8 @@
       </node>
       <transition target-connector="in1" target-path="./+1">
         <transition-display>
-          <bend-point relative-to="source" x="3" y="0"/>
-          <bend-point relative-to="target" x="3" y="0"/>
+          <bend-point relative-to="source" x="2" y="0"/>
+          <bend-point relative-to="target" x="2" y="0"/>
         </transition-display>
       </transition>
     </segment>
